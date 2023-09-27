@@ -5,8 +5,8 @@ const { ccclass, property } = cc._decorator;
  *  */
 @ccclass
 export default class AItemRenderer<T> extends cc.Component {
-    @property({displayName:"是否添加点击事件"})
-    isClick:boolean = false;
+    @property({ displayName: "是否添加点击事件" })
+    isClick: boolean = false;
 
     protected callback: Function;       //回调函数
     protected cbThis: any;              //回调作用域
@@ -30,7 +30,7 @@ export default class AItemRenderer<T> extends cc.Component {
 
     /**销毁 */
     public onDestroy(): void {
-        this._data = null;   
+        this._data = null;
     }
 
     /**
@@ -38,7 +38,7 @@ export default class AItemRenderer<T> extends cc.Component {
      * @param cb 回调函数
      * @param cbT 回调作用域
      */
-     public setTouchCallback(cb?: Function, cbT?: any): void {
+    public setTouchCallback(cb?: Function, cbT?: any): void {
         this.callback = cb;
         this.cbThis = cbT;
         if (this.node) {

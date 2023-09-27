@@ -8,13 +8,13 @@
 import AItemRenderer from "../Script/core/AItemRenerer";
 
 
-const {ccclass, property} = cc._decorator;
+const { ccclass, property } = cc._decorator;
 
 @ccclass
 export default class item extends AItemRenderer<string> {
-    
+
     protected dataChanged(): void {
-        cc.find("lblName",this.node).getComponent(cc.Label).string = this.data;
+        cc.find("lblName", this.node).getComponent(cc.Label).string = this.data;
     }
-   
+
 }

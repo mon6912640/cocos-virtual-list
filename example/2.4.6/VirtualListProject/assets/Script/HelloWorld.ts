@@ -7,7 +7,7 @@
 
 import AVirtualScrollView from "./core/AVirtualScrollView";
 
-const {ccclass, property} = cc._decorator;
+const { ccclass, property } = cc._decorator;
 
 @ccclass
 export default class NewClass extends cc.Component {
@@ -21,11 +21,11 @@ export default class NewClass extends cc.Component {
     @property(AVirtualScrollView)
     test4: AVirtualScrollView = null;
 
-    start () {
+    start() {
         cc.debug.setDisplayStats(true);
-        var dataL:string[]=[];
-        for(var i = 0;i<100;i++){
-            dataL.push(i+"");
+        var dataL: string[] = [];
+        for (var i = 0; i < 100; i++) {
+            dataL.push(i + "");
         }
 
         this.test1.refreshData(dataL);
@@ -33,12 +33,12 @@ export default class NewClass extends cc.Component {
         this.test3.refreshData(dataL);
         this.test4.refreshData(dataL);
 
-        setTimeout(()=>{
-            dataL[1]="666";
+        setTimeout(() => {
+            dataL[1] = "666";
             this.test1.refreshData(dataL);
             this.test2.refreshData(dataL);
             this.test3.refreshData(dataL);
             this.test4.refreshData(dataL);
-        },3000)
+        }, 3000)
     }
 }
