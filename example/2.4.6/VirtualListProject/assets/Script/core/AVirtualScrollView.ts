@@ -27,11 +27,11 @@ export default class AVirtualScrollView extends cc.ScrollView {
     /**定时器 */
     private interval: number;
     /**预制体池 */
-    private itemPool: any[];
+    private itemPool: cc.Node[];
     /**预制体列表 */
-    private itemList: any[];
+    private itemList: cc.Node[];
     /**预制体渲染类列表 */
-    private itemRendererList: any[];
+    private itemRendererList: AItemRenderer<any>[];
     /**数据列表 */
     private dataList: any[];
     /**开始坐标 */
@@ -139,12 +139,11 @@ export default class AVirtualScrollView extends cc.ScrollView {
 
         let itemListLen = this.itemList.length;
         if (itemListLen < len) {
-            let itemRenderer = null;
             for (var i = itemListLen; i < len; i++) {
                 let child = this.itemPool.length > 0 ? this.itemPool.shift() : cc.instantiate(this.itemRenderer);
                 this.content.addChild(child);
                 this.itemList.push(child);
-                itemRenderer = child.getComponent(AItemRenderer);
+                let itemRenderer = child.getComponent(AItemRenderer);
                 this.itemRendererList.push(itemRenderer);
 
                 if (itemRenderer.isClick) {
@@ -153,9 +152,8 @@ export default class AVirtualScrollView extends cc.ScrollView {
             }
         } else {
             let cL: number = this.content.childrenCount;
-            let item;
             while (cL > len) {
-                item = this.itemList[cL - 1];
+                let item = this.itemList[cL - 1];
                 this.content.removeChild(item);
                 this.itemList.splice(cL - 1, 1);
                 this.itemRendererList.splice(cL - 1, 1);
@@ -219,13 +217,12 @@ export default class AVirtualScrollView extends cc.ScrollView {
         }
         let tempV = 0;
         let itemListLen = this.itemList.length;
-        let item, idx;
         for (var i = 0; i < itemListLen; i++) {
-            idx = (start + i) % itemListLen;
-            item = this.itemList[idx];
+            let idx = (start + i) % itemListLen;
+            let item = this.itemList[idx];
             tempV = this.startPos.x + ((start + i) * this.itemW);
             if (item.x != tempV || this.forcedRefresh) {
-                console.log("修改的数据=" + (start + i))
+                // console.log("修改的数据=" + (start + i))
                 item.x = tempV;
                 this.itemRendererList[idx].data = this.dataList[start + i];
             }
@@ -247,13 +244,12 @@ export default class AVirtualScrollView extends cc.ScrollView {
 
         let tempV = 0;
         let itemListLen = this.itemList.length;
-        let item, idx;
         for (var i = 0; i < itemListLen; i++) {
-            idx = (start + i) % itemListLen;
-            item = this.itemList[idx];
+            let idx = (start + i) % itemListLen;
+            let item = this.itemList[idx];
             tempV = this.startPos.y + (-(start + i) * this.itemH);
             if (item.y != tempV || this.forcedRefresh) {
-                console.log("修改的数据=" + (start + i))
+                // console.log("修改的数据=" + (start + i))
                 item.y = tempV;
                 this.itemRendererList[idx].data = this.dataList[start + i];
             }
@@ -287,10 +283,9 @@ export default class AVirtualScrollView extends cc.ScrollView {
         let tempX = 0;
         let tempY = 0;
         let itemListLen = this.itemList.length;
-        let item, idx;
         for (var i = 0; i < itemListLen; i++) {
-            idx = (start + i) % itemListLen;
-            item = this.itemList[idx];
+            let idx = (start + i) % itemListLen;
+            let item = this.itemList[idx];
             if (isVDirection) {
                 tempX = this.startPos.x + (Math.floor((start + i) / this.verticalCount)) * this.itemW;
                 tempY = this.startPos.y + -((start + i) % this.verticalCount) * this.itemH;
@@ -300,7 +295,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
             }
 
             if (item.y != tempY || item.x != tempX || this.forcedRefresh) {
-                console.log("修改的数据=" + (start + i))
+                // console.log("修改的数据=" + (start + i))
                 item.x = tempX;
                 item.y = tempY;
                 this.itemRendererList[idx].data = this.dataList[start + i];

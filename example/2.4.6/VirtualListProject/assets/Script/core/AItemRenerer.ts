@@ -54,6 +54,8 @@ export default class AItemRenderer<T> extends cc.Component {
      * @param e 
      */
     protected onClickCallback(e: cc.Event): void {
-        this.callback && this.callback.call(this.cbThis, this.data);
+        let t = this;
+        console.log("点击了" + t.data);
+        t.callback && t.callback.call(t.cbThis, t.data);
     }
 }

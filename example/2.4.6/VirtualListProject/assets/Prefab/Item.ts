@@ -13,8 +13,18 @@ const { ccclass, property } = cc._decorator;
 @ccclass
 export default class item extends AItemRenderer<string> {
 
+    protected onLoad(): void {
+        let t = this;
+        t.callback = t.onClick;
+        t.cbThis = t;
+    }
+
     protected dataChanged(): void {
         cc.find("lblName", this.node).getComponent(cc.Label).string = this.data;
     }
 
+    private onClick(pData: any) {
+        let t = this;
+        console.log("点击了" + pData);
+    }
 }
