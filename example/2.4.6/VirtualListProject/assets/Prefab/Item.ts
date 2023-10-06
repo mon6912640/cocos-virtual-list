@@ -14,12 +14,19 @@ const { ccclass, property } = cc._decorator;
 export default class item extends AItemRenderer<string> {
 
 
+    private _defaultH = 0;
+
     private _lblName: cc.Label = null;
+    private _bg:cc.Node = null;
+
     protected onLoad(): void {
         let t = this;
         t.callback = t.onClick;
         t.cbThis = t;
-        t._lblName = cc.find("lblName", t.node).getComponent(cc.Label);
+        t._lblName = t.node.getChildByName("lblName").getComponent(cc.Label);
+        t._bg = t.node.getChildByName("bg");
+
+        t._defaultH = t.node.height;
     }
 
     protected dataChanged(): void {
@@ -36,7 +43,18 @@ export default class item extends AItemRenderer<string> {
         let t = this;
         t._curData = pData;
         if (pData) {
-            t._lblName.string = "f " + pData;
+            t._lblName.string = "" + pData;
+
+            let id = ~~pData;
+            if (id % 2 == 0) {
+                t.node.height = t._defaultH;
+                t._bg.color = cc.Color.WHITE;
+            }
+            else {
+                t.node.height = t._defaultH * 2;
+                t._bg.color = cc.Color.RED;
+            }
+            t._bg.height = t.node.height;
         }
         else {
         }
@@ -44,5 +62,11 @@ export default class item extends AItemRenderer<string> {
 
     public closePanel() {
         this.setData(null);
+    }
+
+    protected onClickCallback(e: cc.Event): void {
+        let t = this;
+        super.onClickCallback(e);
+        console.log("点击了" + t._curData);
     }
 }

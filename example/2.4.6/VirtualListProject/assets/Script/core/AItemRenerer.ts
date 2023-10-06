@@ -31,6 +31,8 @@ export default class AItemRenderer<T> extends cc.Component {
     /**销毁 */
     public onDestroy(): void {
         this._data = null;
+        this.callback = null;
+        this.cbThis = null;
     }
 
     /**

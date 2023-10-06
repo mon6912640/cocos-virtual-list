@@ -44,6 +44,12 @@ export default class AVirtualScrollView extends cc.ScrollView {
     /**刷新 */
     private refresh: boolean;
 
+    private _defaultW = 0;
+    private _defaultH = 0;
+    private _itemAnchorX = 0;
+    private _itemAnchorY = 0;
+    private _dyncSize = false;
+
     private _numItems: number = 0;
     itemRenderer: (index: number, itemNode: cc.Node) => void;
 
@@ -57,13 +63,17 @@ export default class AVirtualScrollView extends cc.ScrollView {
 
         //起始位置
         let itemNode: cc.Node = t.itemRenderPF.data;
+        t._itemAnchorX = itemNode.anchorX;
+        t._itemAnchorY = itemNode.anchorY;
+        t._defaultW = itemNode.width;
+        t._defaultH = itemNode.height;
         t.startPos = new cc.Vec2(itemNode.width * itemNode.anchorX + t.contentLayout.paddingLeft, -(itemNode.height * itemNode.anchorY + t.contentLayout.paddingTop));
         //预制体宽高
         t.itemW = itemNode.width + t.contentLayout.spacingX;
         t.itemH = itemNode.height + t.contentLayout.spacingY;
         //垂直、水平最大预制体数量
-        t.horizontalCount = Math.ceil(t.node.width / t.itemW) + 1;
-        t.verticalCount = Math.ceil(t.node.height / t.itemH) + 1;
+        t.horizontalCount = Math.ceil(t.node.width / t.itemW) + 2;
+        t.verticalCount = Math.ceil(t.node.height / t.itemH) + 2;
 
         if (t.contentLayout.type == cc.Layout.Type.GRID) {
             if (t.contentLayout.startAxis == cc.Layout.AxisDirection.HORIZONTAL) {
@@ -85,7 +95,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
     /**利用cc.ScrollView本身方法 来标记滑动中 */
     setContentPosition(position: cc.Vec2) {
         super.setContentPosition(position);
-        this.refresh = true;
+        this.refresh = true; //标记刷新
     }
 
     /**
@@ -104,28 +114,28 @@ export default class AVirtualScrollView extends cc.ScrollView {
         this.callback && this.callback.call(this.cbThis, data);
     }
 
-    /**
-     * 刷新数据
-     * @param data 数据源 单项|队列
-     */
-    public refreshData(data: any | any[]): void {
-        if (Array.isArray(data)) {
-            // this.dataList = data;
-            this._numItems = data.length;
-        } else {
-            // this.dataList = [data];
-            this._numItems = 1;
-        }
+    // /**
+    //  * 刷新数据
+    //  * @param data 数据源 单项|队列
+    //  */
+    // public refreshData(data: any | any[]): void {
+    //     if (Array.isArray(data)) {
+    //         // this.dataList = data;
+    //         this._numItems = data.length;
+    //     } else {
+    //         // this.dataList = [data];
+    //         this._numItems = 1;
+    //     }
 
-        if (this.interval) {
-            clearInterval(this.interval);
-        }
-        this.addItem();
-        this.refreshContentSize();
-        this.forcedRefresh = true;
-        this.refresh = true;
-        this.interval = setInterval(this.refreshItem.bind(this), 1000 / 10); //定时刷新
-    }
+    //     if (this.interval) {
+    //         clearInterval(this.interval);
+    //     }
+    //     this.addItem();
+    //     this.refreshContentSize();
+    //     this.forcedRefresh = true;
+    //     this.refresh = true;
+    //     this.interval = setInterval(this.refreshItem.bind(this), 1000 / 10); //定时刷新
+    // }
 
 
     /**添加预制体 */
@@ -178,8 +188,19 @@ export default class AVirtualScrollView extends cc.ScrollView {
         let dataListLen = this._numItems;
         switch (this.contentLayout.type) {
             case cc.Layout.Type.VERTICAL:
-                this.content.height = layout.paddingTop + dataListLen * this.itemH + layout.paddingBottom;
-                console.log("this.content.height=" + this.content.height);
+                // console.log("this.content.height=" + this.content.height);
+                if (this._dyncSize) {
+                    this._dyncSize = false;
+                    let t_itemTotalH = 0;
+                    for (let i = 0; i < dataListLen; i++) {
+                        let t_vo = this.getVo(i);
+                        t_itemTotalH += (t_vo.realH ? t_vo.realH : this._defaultH) + layout.spacingY;
+                    }
+                    this.content.height = layout.paddingTop + t_itemTotalH + layout.paddingBottom;
+                }
+                else {
+                    this.content.height = layout.paddingTop + dataListLen * this.itemH + layout.paddingBottom;
+                }
                 break;
             case cc.Layout.Type.HORIZONTAL:
                 this.content.width = layout.paddingLeft + dataListLen * this.itemW + layout.paddingRight;
@@ -248,7 +269,9 @@ export default class AVirtualScrollView extends cc.ScrollView {
 
     /**刷新垂直 */
     private refreshVertical(): void {
-        let start = Math.floor(Math.abs(this.getContentPosition().y) / this.itemH);
+        let t_contentRefresh = false;
+        // let start = Math.floor(Math.abs(this.getContentPosition().y) / this.itemH);
+        let start = this.getIndexByPos(this.getContentPosition(), this.contentLayout.type);
         if (start < 0 || this.getContentPosition().y < 0) {
             start = 0;
         }
@@ -263,20 +286,43 @@ export default class AVirtualScrollView extends cc.ScrollView {
             start = Math.max(end - this.verticalCount, 0);
         }
 
+        console.log("=====================================");
+        // console.log("this.getContentPosition().y=" + this.getContentPosition().y);
+        console.log("start=" + start + " end=" + end);
+
         let tempV = 0;
         let itemListLen = this.itemList.length;
+        // console.log("itemListLen=" + itemListLen);
         for (var i = 0; i < itemListLen; i++) {
             let idx = (start + i) % itemListLen;
             let item = this.itemList[idx];
-            tempV = this.startPos.y + (-(start + i) * this.itemH);
+            // tempV = this.startPos.y + (-(start + i) * this.itemH);
+            let t_vo = this.getVo(start + i);
+            tempV = t_vo.y;
             if (item.y != tempV || this.forcedRefresh) {
                 console.log("修改的数据=" + (start + i))
                 item.y = tempV;
+                console.log(`index= ${start + i}, item.y= ${item.y}`);
+
+                console.log(`t_vo.y= ${t_vo.y}`);
                 // this.itemRendererList[idx].data = this.dataList[start + i];
                 if (this.itemRenderer) {
                     this.itemRenderer(start + i, item); // 传递索引和item
                 }
+                console.log("item.height=" + item.height);
+
             }
+            if (item.height != this._defaultH && t_vo.realH != item.height) {
+                //重新计算content高度
+                t_vo.realH = item.height;
+                t_contentRefresh = true;
+            }
+        }
+        if (t_contentRefresh) {
+            this._dyncSize = true;
+            this.calAllVoPos();
+            this.refreshContentSize();
+            this.refreshVertical();
         }
     }
 
@@ -344,13 +390,139 @@ export default class AVirtualScrollView extends cc.ScrollView {
         let t = this;
         t._numItems = value;
 
+        for (let i = 0; i < value; i++) {
+            let t_vo = new AVItemVo();
+            t_vo.index = i;
+        }
+
         if (t.interval) {
             clearInterval(t.interval);
         }
         t.addItem();
         t.refreshContentSize();
+        t.calAllVoPos(true);
         t.forcedRefresh = true;
         t.refresh = true;
         t.interval = setInterval(t.refreshItem.bind(this), 1000 / 10); //定时刷新
     }
+
+    private _voList: AVItemVo[] = [];
+    private calAllVoPos(pClear = false) {
+        let t = this;
+        if (pClear) {
+            t._voList.length = 0;
+            for (let i = 0; i < t._numItems; i++) {
+                let t_vo = new AVItemVo();
+                t_vo.index = i;
+                t._voList.push(t_vo);
+                switch (this.contentLayout.type) {
+                    case cc.Layout.Type.HORIZONTAL:
+                        t_vo.x = t.startPos.x + (i * t.itemW);
+                        t_vo.y = t.startPos.y;
+                        break;
+                    case cc.Layout.Type.VERTICAL:
+                        t_vo.x = t.startPos.x;
+                        t_vo.y = t.startPos.y + -(i * t.itemH);
+                        break;
+                    case cc.Layout.Type.GRID:
+                        if (this.contentLayout.startAxis == cc.Layout.AxisDirection.HORIZONTAL) {
+                            t_vo.x = t.startPos.x + (Math.floor(i / t.verticalCount)) * t.itemW;
+                            t_vo.y = t.startPos.y + -((i % t.verticalCount)) * t.itemH;
+                        } else if (this.contentLayout.startAxis == cc.Layout.AxisDirection.VERTICAL) {
+                            t_vo.x = t.startPos.x + ((i % t.horizontalCount)) * t.itemW;
+                            t_vo.y = t.startPos.y + -(Math.floor(i / t.horizontalCount)) * t.itemH;
+                        }
+                        break;
+                }
+                t_vo.letf = t_vo.x - t._itemAnchorX * t._defaultW;
+                t_vo.right = t_vo.x + (1 - t._itemAnchorX) * t._defaultW;
+                t_vo.top = t_vo.y + (1 - t._itemAnchorY) * t._defaultH;
+                t_vo.bottom = t_vo.y - t._itemAnchorY * t._defaultH;
+            }
+        }
+        else {
+            let t_accRight = t.contentLayout.paddingLeft;
+            let t_accBottom = -t.contentLayout.paddingTop;
+            for (let i = 0; i < t._numItems; i++) {
+                let t_vo = t._voList[i];
+                switch (this.contentLayout.type) {
+                    case cc.Layout.Type.HORIZONTAL:
+                        let t_showW = t_vo.realW ? t_vo.realW : t._defaultW;
+                        t_vo.x = t_accRight + t_showW * t._itemAnchorX;
+                        t_vo.y = t.startPos.y;
+                        t_accRight = t_vo.x + t.contentLayout.spacingX + t_showW * (1 - t._itemAnchorX);
+                        t_vo.letf = t_vo.x - t._itemAnchorX * t_showW;
+                        t_vo.right = t_vo.x + (1 - t._itemAnchorX) * t_showW;
+                        t_vo.top = t_vo.y + (1 - t._itemAnchorY) * t._defaultH;
+                        t_vo.bottom = t_vo.y - t._itemAnchorY * t._defaultH;
+                        break;
+                    case cc.Layout.Type.VERTICAL:
+                        let t_showH = t_vo.realH ? t_vo.realH : t._defaultH;
+                        t_vo.x = t.startPos.x;
+                        t_vo.y = t_accBottom - t_showH * t._itemAnchorY;
+                        t_accBottom = t_vo.y - t.contentLayout.spacingY - t_showH * (1 - t._itemAnchorY);
+                        t_vo.letf = t_vo.x - t._itemAnchorX * t._defaultW;
+                        t_vo.right = t_vo.x + (1 - t._itemAnchorX) * t._defaultW;
+                        t_vo.top = t_vo.y + (1 - t._itemAnchorY) * t_showH;
+                        t_vo.bottom = t_vo.y - t._itemAnchorY * t_showH;
+                        break;
+                    case cc.Layout.Type.GRID:
+                        //不支持动态尺寸
+                        break;
+                }
+            }
+        }
+
+        if(this.contentLayout.type == cc.Layout.Type.VERTICAL){
+            for(let i = 0; i< t._numItems; i++){
+                let t_vo = t._voList[i];
+                console.log(`t_vo.y= ${t_vo.y}, t_vo.top= ${t_vo.top}, t_vo.bottom= ${t_vo.bottom}`);
+            }
+        }
+    }
+
+    private getVo(pIndex: number) {
+        let t = this;
+        return t._voList[pIndex];
+    }
+
+    private getIndexByPos(pPos: cc.Vec2, pLayoutType: cc.Layout.Type) {
+        let t = this;
+        let t_index = 0;
+        console.log(`pPos.x= ${pPos.x}, pPos.y= ${pPos.y}`);
+        switch (pLayoutType) {
+            case cc.Layout.Type.HORIZONTAL:
+                for (let i = 0; i < t._numItems; i++) {
+                    let t_vo = t.getVo(i);
+                    if (pPos.x >= t_vo.letf && pPos.x <= t_vo.right + t.contentLayout.spacingX) {
+                        t_index = i;
+                        break;
+                    }
+                }
+                return t_index;
+            case cc.Layout.Type.VERTICAL:
+                for (let i = 0; i < t._numItems; i++) {
+                    let t_vo = t.getVo(i);
+                    if (-pPos.y <= t_vo.top && -pPos.y >= t_vo.bottom - t.contentLayout.spacingY) {
+                        console.log(`pPos.y= ${pPos.y}, t_vo.top= ${t_vo.top}, t_vo.bottom= ${t_vo.bottom}`);
+                        t_index = i;
+                        break;
+                    }
+                }
+                return t_index;
+        }
+    }
+}
+
+class AVItemVo {
+    index = 0;
+    item: cc.Node = null;
+    x = 0;
+    y = 0;
+    realW = 0;
+    realH = 0;
+    letf = 0;
+    right = 0;
+    top = 0;
+    bottom = 0;
 }

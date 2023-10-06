@@ -534,7 +534,7 @@
     "horizontal": false,
     "vertical": true,
     "inertia": true,
-    "brake": 0.5,
+    "brake": 0.75,
     "elastic": true,
     "bounceDuration": 1,
     "scrollEvents": [],

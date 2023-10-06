@@ -50,15 +50,16 @@ export default class NewClass extends cc.Component {
         // this.test4.refreshData(dataL);
 
         setTimeout(() => {
-            dataL[1] = "666";
+            // dataL[1] = "666";
             // this.test1.refreshData(dataL);
             // this.test2.refreshData(dataL);
             // this.test3.refreshData(dataL);
             // this.test4.refreshData(dataL);
-            this.test1.numItems = dataL.length;
-            this.test2.numItems = dataL.length;
-            this.test3.numItems = dataL.length;
-            this.test4.numItems = dataL.length;
+            // this.test1.numItems = dataL.length;
+            // this.test2.numItems = dataL.length;
+            // this.test3.numItems = dataL.length;
+            // this.test4.numItems = dataL.length;
+            // this.test1.numItems = 1;
         }, 3000)
     }
 
