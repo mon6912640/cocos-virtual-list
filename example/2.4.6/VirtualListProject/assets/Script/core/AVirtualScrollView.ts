@@ -11,7 +11,7 @@ const { ccclass, property } = cc._decorator;
 export default class AVirtualScrollView extends cc.ScrollView {
     /**渲染预制体必需挂载 AItemRenderer子类 */
     @property({ type: cc.Prefab, serializable: true, displayName: "渲染预制体" })
-    itemRenderer: cc.Prefab = null;
+    itemRenderPF: cc.Prefab = null;
 
     /**子项点击 回调函数  回调作用域*/
     protected callback: Function;
@@ -31,9 +31,9 @@ export default class AVirtualScrollView extends cc.ScrollView {
     /**预制体列表 */
     private itemList: cc.Node[];
     /**预制体渲染类列表 */
-    private itemRendererList: AItemRenderer<any>[];
+    private itemComList: AItemRenderer<any>[];
     /**数据列表 */
-    private dataList: any[];
+    // private dataList: any[];
     /**开始坐标 */
     private startPos: cc.Vec2;
     /**布局*/
@@ -44,36 +44,41 @@ export default class AVirtualScrollView extends cc.ScrollView {
     /**刷新 */
     private refresh: boolean;
 
+    private _numItems: number = 0;
+    itemRenderer: (index: number, itemNode: cc.Node) => void;
+
     protected onLoad(): void {
-        this.itemList = [];
-        this.itemPool = [];
-        this.itemRendererList = [];
-        this.contentLayout = this.content.getComponent(cc.Layout);
-        this.contentLayout.enabled = false;
+        let t = this;
+        t.itemList = [];
+        t.itemPool = [];
+        t.itemComList = [];
+        t.contentLayout = t.content.getComponent(cc.Layout);
+        t.contentLayout.enabled = false;
 
         //起始位置
-        let itemNode: cc.Node = this.itemRenderer.data;
-        this.startPos = new cc.Vec2(itemNode.width * itemNode.anchorX + this.contentLayout.paddingLeft, -(itemNode.height * itemNode.anchorY + this.contentLayout.paddingTop));
+        let itemNode: cc.Node = t.itemRenderPF.data;
+        t.startPos = new cc.Vec2(itemNode.width * itemNode.anchorX + t.contentLayout.paddingLeft, -(itemNode.height * itemNode.anchorY + t.contentLayout.paddingTop));
         //预制体宽高
-        this.itemW = itemNode.width + this.contentLayout.spacingX;
-        this.itemH = itemNode.height + this.contentLayout.spacingY;
+        t.itemW = itemNode.width + t.contentLayout.spacingX;
+        t.itemH = itemNode.height + t.contentLayout.spacingY;
         //垂直、水平最大预制体数量
-        this.horizontalCount = Math.ceil(this.node.width / this.itemW) + 1;
-        this.verticalCount = Math.ceil(this.node.height / this.itemH) + 1;
+        t.horizontalCount = Math.ceil(t.node.width / t.itemW) + 1;
+        t.verticalCount = Math.ceil(t.node.height / t.itemH) + 1;
 
-        if (this.contentLayout.type == cc.Layout.Type.GRID) {
-            if (this.contentLayout.startAxis == cc.Layout.AxisDirection.HORIZONTAL) {
-                this.horizontalCount = Math.floor(this.node.width / this.itemW);
+        if (t.contentLayout.type == cc.Layout.Type.GRID) {
+            if (t.contentLayout.startAxis == cc.Layout.AxisDirection.HORIZONTAL) {
+                t.horizontalCount = Math.floor(t.node.width / t.itemW);
             } else {
-                this.verticalCount = Math.floor(this.node.height / this.itemH);
+                t.verticalCount = Math.floor(t.node.height / t.itemH);
             }
         }
     }
 
     protected onDestroy(): void {
-        this.dataList = null;
+        // this.dataList = null;
+        this._numItems = 0;
         this.itemList = null;
-        this.itemRendererList = null;
+        this.itemComList = null;
         clearInterval(this.interval);
     }
 
@@ -105,9 +110,11 @@ export default class AVirtualScrollView extends cc.ScrollView {
      */
     public refreshData(data: any | any[]): void {
         if (Array.isArray(data)) {
-            this.dataList = data;
+            // this.dataList = data;
+            this._numItems = data.length;
         } else {
-            this.dataList = [data];
+            // this.dataList = [data];
+            this._numItems = 1;
         }
 
         if (this.interval) {
@@ -117,7 +124,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
         this.refreshContentSize();
         this.forcedRefresh = true;
         this.refresh = true;
-        this.interval = setInterval(this.refreshItem.bind(this), 1000 / 10);
+        this.interval = setInterval(this.refreshItem.bind(this), 1000 / 10); //定时刷新
     }
 
 
@@ -135,19 +142,20 @@ export default class AVirtualScrollView extends cc.ScrollView {
                 len = this.horizontalCount * this.verticalCount;
                 break;
         }
-        len = Math.min(len, this.dataList.length);
+        // len = Math.min(len, this.dataList.length);
+        len = Math.min(len, this._numItems);
 
         let itemListLen = this.itemList.length;
         if (itemListLen < len) {
             for (var i = itemListLen; i < len; i++) {
-                let child = this.itemPool.length > 0 ? this.itemPool.shift() : cc.instantiate(this.itemRenderer);
+                let child = this.itemPool.length > 0 ? this.itemPool.shift() : cc.instantiate(this.itemRenderPF);
                 this.content.addChild(child);
                 this.itemList.push(child);
-                let itemRenderer = child.getComponent(AItemRenderer);
-                this.itemRendererList.push(itemRenderer);
+                let itemCom = child.getComponent(AItemRenderer);
+                this.itemComList.push(itemCom);
 
-                if (itemRenderer.isClick) {
-                    itemRenderer.setTouchCallback(this.onItemTap, this);
+                if (itemCom.isClick) {
+                    itemCom.setTouchCallback(this.onItemTap, this);
                 }
             }
         } else {
@@ -156,7 +164,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
                 let item = this.itemList[cL - 1];
                 this.content.removeChild(item);
                 this.itemList.splice(cL - 1, 1);
-                this.itemRendererList.splice(cL - 1, 1);
+                this.itemComList.splice(cL - 1, 1);
                 this.itemPool.push(item);
                 cL = this.content.childrenCount;
             }
@@ -166,10 +174,12 @@ export default class AVirtualScrollView extends cc.ScrollView {
     /**根据数据数量 改变content宽高 */
     private refreshContentSize(): void {
         let layout: cc.Layout = this.contentLayout;
-        let dataListLen: number = this.dataList.length;
+        // let dataListLen: number = this.dataList.length;
+        let dataListLen = this._numItems;
         switch (this.contentLayout.type) {
             case cc.Layout.Type.VERTICAL:
                 this.content.height = layout.paddingTop + dataListLen * this.itemH + layout.paddingBottom;
+                console.log("this.content.height=" + this.content.height);
                 break;
             case cc.Layout.Type.HORIZONTAL:
                 this.content.width = layout.paddingLeft + dataListLen * this.itemW + layout.paddingRight;
@@ -211,8 +221,12 @@ export default class AVirtualScrollView extends cc.ScrollView {
             start = 0;
         }
         let end = start + this.horizontalCount;
-        if (end > this.dataList.length) {//超出边界处理
-            end = this.dataList.length;
+        // if (end > this.dataList.length) {//超出边界处理
+        //     end = this.dataList.length;
+        //     start = Math.max(end - this.horizontalCount, 0);
+        // }
+        if (end > this._numItems) {//超出边界处理
+            end = this._numItems;
             start = Math.max(end - this.horizontalCount, 0);
         }
         let tempV = 0;
@@ -224,7 +238,10 @@ export default class AVirtualScrollView extends cc.ScrollView {
             if (item.x != tempV || this.forcedRefresh) {
                 // console.log("修改的数据=" + (start + i))
                 item.x = tempV;
-                this.itemRendererList[idx].data = this.dataList[start + i];
+                // this.itemRendererList[idx].data = this.dataList[start + i];
+                if (this.itemRenderer) {
+                    this.itemRenderer(start + i, item); // 传递索引和item
+                }
             }
         }
     }
@@ -237,8 +254,12 @@ export default class AVirtualScrollView extends cc.ScrollView {
         }
 
         let end = start + this.verticalCount;
-        if (end > this.dataList.length) {
-            end = this.dataList.length;
+        // if (end > this.dataList.length) {
+        //     end = this.dataList.length;
+        //     start = Math.max(end - this.verticalCount, 0);
+        // }
+        if (end > this._numItems) {
+            end = this._numItems;
             start = Math.max(end - this.verticalCount, 0);
         }
 
@@ -249,9 +270,12 @@ export default class AVirtualScrollView extends cc.ScrollView {
             let item = this.itemList[idx];
             tempV = this.startPos.y + (-(start + i) * this.itemH);
             if (item.y != tempV || this.forcedRefresh) {
-                // console.log("修改的数据=" + (start + i))
+                console.log("修改的数据=" + (start + i))
                 item.y = tempV;
-                this.itemRendererList[idx].data = this.dataList[start + i];
+                // this.itemRendererList[idx].data = this.dataList[start + i];
+                if (this.itemRenderer) {
+                    this.itemRenderer(start + i, item); // 传递索引和item
+                }
             }
         }
     }
@@ -275,8 +299,12 @@ export default class AVirtualScrollView extends cc.ScrollView {
         }
 
         let end = start + this.horizontalCount * this.verticalCount;
-        if (end > this.dataList.length) {
-            end = this.dataList.length;
+        // if (end > this.dataList.length) {
+        //     end = this.dataList.length;
+        //     start = Math.max(end - this.horizontalCount * this.verticalCount, 0);
+        // }
+        if (end > this._numItems) {
+            end = this._numItems;
             start = Math.max(end - this.horizontalCount * this.verticalCount, 0);
         }
 
@@ -298,8 +326,31 @@ export default class AVirtualScrollView extends cc.ScrollView {
                 // console.log("修改的数据=" + (start + i))
                 item.x = tempX;
                 item.y = tempY;
-                this.itemRendererList[idx].data = this.dataList[start + i];
+                // this.itemRendererList[idx].data = this.dataList[start + i];
+                if (this.itemRenderer) {
+                    this.itemRenderer(start + i, item); // 传递索引和item
+                }
             }
         }
+    }
+
+
+    get numItems(): number {
+        let t = this;
+        return t._numItems;
+    }
+
+    set numItems(value: number) {
+        let t = this;
+        t._numItems = value;
+
+        if (t.interval) {
+            clearInterval(t.interval);
+        }
+        t.addItem();
+        t.refreshContentSize();
+        t.forcedRefresh = true;
+        t.refresh = true;
+        t.interval = setInterval(t.refreshItem.bind(this), 1000 / 10); //定时刷新
     }
 }
