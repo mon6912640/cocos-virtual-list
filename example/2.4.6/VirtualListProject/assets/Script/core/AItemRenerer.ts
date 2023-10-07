@@ -10,13 +10,32 @@ export default class AItemRenderer extends cc.Component {
 
     index = 0;
 
-    protected _callback: (pIndex: number) => void;       //回调函数
-    protected _cbThis: any;              //回调作用域
+    /** 回调函数 */
+    protected _callback: (pIndex: number) => void;
+    /** 回调作用域 */
+    protected _cbThis: any;
 
     /**销毁 */
     public onDestroy(): void {
         this._callback = null;
         this._cbThis = null;
+    }
+
+    protected _selected: boolean = false;
+    get selected(): boolean {
+        let t = this;
+        return t._selected;
+    }
+
+    set selected(pValue: boolean) {
+        let t = this;
+        t._selected = pValue;
+        t.onSelectedChanged(pValue);
+    }
+
+    /** 选中处理 */
+    protected onSelectedChanged(pVal:boolean): void {
+        //供子类重写
     }
 
     /**

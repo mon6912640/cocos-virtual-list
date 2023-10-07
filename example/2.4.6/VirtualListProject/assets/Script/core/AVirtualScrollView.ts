@@ -296,6 +296,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
                     t_needAdjustContentPos = true;
                 }
                 item.x = targetV;
+                item.getComponent(AItemRenderer).index = t_vo.index;
                 // this.itemRendererList[idx].data = this.dataList[start + i];
                 if (this.itemRenderer) {
                     this.itemRenderer(start + i, item); // 传递索引和item
@@ -353,6 +354,8 @@ export default class AVirtualScrollView extends cc.ScrollView {
             let t_needAdjustContentPos = false; //是否需要调整content位置
             if (item.y != targetV || this.forcedRefresh) {
                 console.log("修改数据 " + (start + i))
+                let t_com = item.getComponent(AItemRenderer);
+                t_com.index = t_vo.index;
                 if (targetV > item.y) {
                     //item往前移动的情况需要重新计算content位置
                     t_needAdjustContentPos = true;
@@ -365,8 +368,8 @@ export default class AVirtualScrollView extends cc.ScrollView {
                 if (this.itemRenderer) {
                     this.itemRenderer(start + i, item); // 传递索引和item
                 }
+                t_com.selected = t_com.index == this._curSelectedIndex;
                 // console.log("item.height=" + item.height);
-
             }
             if (item.height != t_vo.height) {
                 //重新计算content尺寸
@@ -448,11 +451,6 @@ export default class AVirtualScrollView extends cc.ScrollView {
     set numItems(value: number) {
         let t = this;
         t._numItems = value;
-
-        for (let i = 0; i < value; i++) {
-            let t_vo = new AVItemVo();
-            t_vo.index = i;
-        }
 
         if (t.interval) {
             clearInterval(t.interval);
@@ -546,7 +544,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
     private getIndexByPos(pPos: cc.Vec2, pLayoutType: cc.Layout.Type) {
         let t = this;
         let t_index = 0;
-        console.log(`pPos.x= ${pPos.x}, pPos.y= ${pPos.y}`);
+        // console.log(`pPos.x= ${pPos.x}, pPos.y= ${pPos.y}`);
         switch (pLayoutType) {
             case cc.Layout.Type.HORIZONTAL:
                 for (let i = 0; i < t._numItems; i++) {
@@ -561,7 +559,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
                 for (let i = 0; i < t._numItems; i++) {
                     let t_vo = t.getVo(i);
                     if (-pPos.y <= t_vo.top && -pPos.y >= t_vo.bottom - t.contentLayout.spacingY) {
-                        console.log(`pPos.y= ${pPos.y}, t_vo.top= ${t_vo.top}, t_vo.bottom= ${t_vo.bottom}`);
+                        // console.log(`pPos.y= ${pPos.y}, t_vo.top= ${t_vo.top}, t_vo.bottom= ${t_vo.bottom}`);
                         t_index = i;
                         break;
                     }

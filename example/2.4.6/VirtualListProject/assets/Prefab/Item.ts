@@ -19,19 +19,24 @@ export default class item extends AItemRenderer {
 
     private _lblName: cc.Label = null;
     private _bg: cc.Node = null;
+    private _bgSelect: cc.Node = null;
 
     protected onLoad(): void {
         let t = this;
         t._lblName = t.node.getChildByName("lblName").getComponent(cc.Label);
         t._bg = t.node.getChildByName("bg");
+        t._bgSelect = t.node.getChildByName("bgSelect");
 
         t._defaultH = t.node.height;
         t._defaultW = t.node.width;
+
+        t.onSelectedChanged(false);
     }
 
     private _curData: any;
     public setData(pData: any) {
         let t = this;
+        console.log(`setData index=${t.index} data=${pData}`);
         t._curData = pData;
         if (pData) {
             t._lblName.string = "" + pData;
@@ -52,6 +57,11 @@ export default class item extends AItemRenderer {
         }
         else {
         }
+    }
+
+    protected onSelectedChanged(pVal: boolean): void {
+        let t = this;
+        t._bgSelect.active = pVal;
     }
 
     public closePanel() {
