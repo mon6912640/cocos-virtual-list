@@ -61,6 +61,7 @@ export default class item extends AItemRenderer {
 
     protected onSelectedChanged(pVal: boolean): void {
         let t = this;
+        console.log(`onSelectedChanged index=${t.index} pVal=${pVal}`);
         t._bgSelect.active = pVal;
     }
 

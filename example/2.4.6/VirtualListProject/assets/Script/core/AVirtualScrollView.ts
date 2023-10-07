@@ -122,8 +122,10 @@ export default class AVirtualScrollView extends cc.ScrollView {
     }
 
     /**选中数据 */
-    private onItemTap(data: any): void {
-        this.callback && this.callback.call(this.cbThis, data);
+    private onItemTap(pIndex: number): void {
+        console.log(`AVirtualScrollView onItemTap data= ${pIndex}`);
+        this.callback && this.callback.call(this.cbThis, pIndex);
+        this.selectedIndex = pIndex;
     }
 
     // /**
@@ -577,6 +579,12 @@ export default class AVirtualScrollView extends cc.ScrollView {
     set selectedIndex(value: number) {
         let t = this;
         t._curSelectedIndex = value;
+        // if (t.selectMode == SelectMode.Single) {
+            for (let i = 0; i < t.itemList.length; i++) {
+                let t_com = t.itemList[i].getComponent(AItemRenderer);
+                t_com.selected = t_com.index == t._curSelectedIndex;
+            }
+        // }
     }
 
     addSeletion(pIndex: number) {
