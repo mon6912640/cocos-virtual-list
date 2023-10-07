@@ -4,45 +4,29 @@ const { ccclass, property } = cc._decorator;
  * @author slf
  *  */
 @ccclass
-export default class AItemRenderer<T> extends cc.Component {
+export default class AItemRenderer extends cc.Component {
     @property({ displayName: "是否添加点击事件" })
     isClick: boolean = false;
 
-    protected callback: Function;       //回调函数
-    protected cbThis: any;              //回调作用域
+    index = 0;
 
-    private _data: T;//数据结构
-    public get data(): T {
-        return this._data;
-    }
-    public set data(v: T) {
-        this._data = v;
-        this.dataChanged();
-    }
-
-    /**数据发生变化 子类重写*/
-    protected dataChanged(): void { }
-
-    /**刷新数据 */
-    public refreshData(): void {
-        this.dataChanged();
-    }
+    protected _callback: (pIndex: number) => void;       //回调函数
+    protected _cbThis: any;              //回调作用域
 
     /**销毁 */
     public onDestroy(): void {
-        this._data = null;
-        this.callback = null;
-        this.cbThis = null;
+        this._callback = null;
+        this._cbThis = null;
     }
 
     /**
      * 设置点击回调
-     * @param cb 回调函数
-     * @param cbT 回调作用域
+     * @param pCallback 回调函数
+     * @param pCbThis 回调作用域
      */
-    public setTouchCallback(cb?: Function, cbT?: any): void {
-        this.callback = cb;
-        this.cbThis = cbT;
+    public setTouchCallback(pCallback?: (pIndex: number) => void, pCbThis?: any): void {
+        this._callback = pCallback;
+        this._cbThis = pCbThis;
         if (this.node) {
             if (this.node.hasEventListener(cc.Node.EventType.TOUCH_END)) {
                 this.node.off(cc.Node.EventType.TOUCH_END, this.onClickCallback, this);
@@ -57,7 +41,9 @@ export default class AItemRenderer<T> extends cc.Component {
      */
     protected onClickCallback(e: cc.Event): void {
         let t = this;
-        console.log("点击了" + t.data);
-        t.callback && t.callback.call(t.cbThis, t.data);
+        if (t._callback) {
+            console.log(`点击了 index=${t.index}`);
+            t._callback.call(t._cbThis, t.index);
+        }
     }
 }

@@ -40,9 +40,9 @@ export default class NewClass extends cc.Component {
         this.test4.itemRenderer = this.onItemRender.bind(this);
 
         this.test1.numItems = dataL.length;
-        this.test2.numItems = dataL.length;
+        // this.test2.numItems = dataL.length;
         this.test3.numItems = dataL.length;
-        this.test4.numItems = dataL.length;
+        // this.test4.numItems = dataL.length;
 
         // this.test1.refreshData(dataL);
         // this.test2.refreshData(dataL);
@@ -61,6 +61,35 @@ export default class NewClass extends cc.Component {
             // this.test4.numItems = dataL.length;
             // this.test1.numItems = 1;
         }, 3000)
+
+        let t_btnUpdate = this.node.getChildByName("btnUpdate");
+        t_btnUpdate.on(cc.Node.EventType.TOUCH_END, () => {
+            console.log("点击了更新");
+            dataL[5] = "66";
+            // this.test1.numItems = dataL.length;
+            // this.test2.numItems = dataL.length;
+            // this.test3.numItems = dataL.length;
+            // this.test4.numItems = dataL.length;
+            this.test3.numItems = dataL.length;
+        }, this);
+
+        let t_btnUpdate1 = this.node.getChildByName("btnUpdate1");
+        t_btnUpdate1.on(cc.Node.EventType.TOUCH_END, () => {
+            console.log("点击了更新1");
+            dataL[6] = "55";
+            // this.test1.refreshData(dataL);
+            // this.test2.refreshData(dataL);
+            // this.test3.refreshData(dataL);
+            // this.test4.refreshData(dataL);
+            this.test3.numItems = dataL.length;
+        }, this);
+
+        let t_btnLook = this.node.getChildByName("btnLook");
+        t_btnLook.on(cc.Node.EventType.TOUCH_END, () => {
+            let pos = this.test3.getContentPosition();
+            console.log("当前content位置：" + pos);
+        }, this);
+
     }
 
     private onItemRender(pIndex: number, pItem: cc.Node) {
