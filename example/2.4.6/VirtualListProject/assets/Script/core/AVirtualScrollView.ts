@@ -8,6 +8,13 @@ export enum SelectMode {
     Multiple,
 }
 
+export enum ListEvent {
+    /** 选中改变事件 */
+    SELECT_CHANGE = "select_change",
+    /** 多选改变时间 */
+    SELECTIONS_CHANGE = "selections_change",
+}
+
 /**
  * 虚拟滚动视图 扩展cc.ScrollView 支持item动态尺寸
  * 渲染预制体必需挂载 AItemRenderer子类
@@ -123,9 +130,22 @@ export default class AVirtualScrollView extends cc.ScrollView {
 
     /**选中数据 */
     private onItemTap(pIndex: number): void {
+        let t = this;
         console.log(`AVirtualScrollView onItemTap data= ${pIndex}`);
-        this.callback && this.callback.call(this.cbThis, pIndex);
-        this.selectedIndex = pIndex;
+        t.callback && t.callback.call(t.cbThis, pIndex);
+        switch (t.selectMode) {
+            case SelectMode.Single:
+                t.selectedIndex = pIndex;
+                break;
+            case SelectMode.Multiple:
+                if (t._selectedIndices.indexOf(pIndex) == -1) {
+                    t.addSeletion(pIndex);
+                }
+                else {
+                    t.removeSelection(pIndex);
+                }
+                break;
+        }
     }
 
     // /**
@@ -293,15 +313,22 @@ export default class AVirtualScrollView extends cc.ScrollView {
             let t_needAdjustContentPos = false; //是否需要调整content位置
             if (item.x != targetV || this.forcedRefresh) {
                 console.log("修改数据 " + (start + i))
+                let t_com = item.getComponent(AItemRenderer);
+                t_com.index = t_vo.index;
                 if (targetV < item.x) {
                     //item往前移动的情况需要重新计算content位置
                     t_needAdjustContentPos = true;
                 }
                 item.x = targetV;
                 item.getComponent(AItemRenderer).index = t_vo.index;
-                // this.itemRendererList[idx].data = this.dataList[start + i];
                 if (this.itemRenderer) {
                     this.itemRenderer(start + i, item); // 传递索引和item
+                }
+                if (t_com.index == this._curSelectedIndex || this._selectedIndices.indexOf(t_com.index) != -1) {
+                    t_com.selected = true;
+                }
+                else {
+                    t_com.selected = false;
                 }
                 if (item.width != t_vo.width) {
                     //重新计算content尺寸
@@ -366,20 +393,24 @@ export default class AVirtualScrollView extends cc.ScrollView {
                 // console.log(`index= ${start + i}, item.y= ${item.y}`);
 
                 // console.log(`t_vo.y= ${t_vo.y}`);
-                // this.itemRendererList[idx].data = this.dataList[start + i];
                 if (this.itemRenderer) {
                     this.itemRenderer(start + i, item); // 传递索引和item
                 }
-                t_com.selected = t_com.index == this._curSelectedIndex;
-                // console.log("item.height=" + item.height);
-            }
-            if (item.height != t_vo.height) {
-                //重新计算content尺寸
-                if (t_needAdjustContentPos) {
-                    this._diffVo.addH(item.height - t_vo.height); //累积高度差
+                if (t_com.index == this._curSelectedIndex || this._selectedIndices.indexOf(t_com.index) != -1) {
+                    t_com.selected = true;
                 }
-                t_vo.height = item.height;
-                t_contentRefresh = true;
+                else {
+                    t_com.selected = false;
+                }
+                // console.log("item.height=" + item.height);
+                if (item.height != t_vo.height) {
+                    //重新计算content尺寸
+                    if (t_needAdjustContentPos) {
+                        this._diffVo.addH(item.height - t_vo.height); //累积高度差
+                    }
+                    t_vo.height = item.height;
+                    t_contentRefresh = true;
+                }
             }
         }
         if (t_contentRefresh) {
@@ -436,33 +467,11 @@ export default class AVirtualScrollView extends cc.ScrollView {
                 // console.log("修改数据 " + (start + i))
                 item.x = tempX;
                 item.y = tempY;
-                // this.itemRendererList[idx].data = this.dataList[start + i];
                 if (this.itemRenderer) {
                     this.itemRenderer(start + i, item); // 传递索引和item
                 }
             }
         }
-    }
-
-
-    get numItems(): number {
-        let t = this;
-        return t._numItems;
-    }
-
-    set numItems(value: number) {
-        let t = this;
-        t._numItems = value;
-
-        if (t.interval) {
-            clearInterval(t.interval);
-        }
-        t.addItem();
-        t.refreshVoData();
-        t.refreshContentSize();
-        t.forcedRefresh = true;
-        t.refresh = true;
-        t.interval = setInterval(t.refreshItem.bind(this), 1000 / 10); //定时刷新
     }
 
     /** 调整content的位置 */
@@ -572,23 +581,101 @@ export default class AVirtualScrollView extends cc.ScrollView {
         }
     }
 
+    //=============================================================
+    //===========================API===============================
+    //=============================================================
+
+    get numItems(): number {
+        let t = this;
+        return t._numItems;
+    }
+
+    set numItems(value: number) {
+        let t = this;
+        t._numItems = value;
+
+        if (t.interval) {
+            clearInterval(t.interval);
+        }
+        t.addItem();
+        t.refreshVoData();
+        t.refreshContentSize();
+        t.forcedRefresh = true;
+        t.refresh = true;
+        t.interval = setInterval(t.refreshItem.bind(this), 1000 / 10); //定时刷新
+    }
+
     get selectedIndex(): number {
         let t = this;
         return t._curSelectedIndex;
     }
+    /** 选中（单选） */
     set selectedIndex(value: number) {
         let t = this;
+        if (t._curSelectedIndex == value)
+            return;
         t._curSelectedIndex = value;
-        // if (t.selectMode == SelectMode.Single) {
-            for (let i = 0; i < t.itemList.length; i++) {
-                let t_com = t.itemList[i].getComponent(AItemRenderer);
-                t_com.selected = t_com.index == t._curSelectedIndex;
-            }
-        // }
+        for (let i = 0; i < t.itemList.length; i++) {
+            let t_com = t.itemList[i].getComponent(AItemRenderer);
+            t_com.selected = t_com.index == t._curSelectedIndex;
+        }
+        t.node.emit(ListEvent.SELECT_CHANGE, t._curSelectedIndex);
     }
 
+    /**
+     * 添加选中（多选）
+     * @param pIndex 
+     */
     addSeletion(pIndex: number) {
         let t = this;
+        if (t._selectedIndices.indexOf(pIndex) == -1) {
+            t._selectedIndices.push(pIndex);
+            for (let v of t.itemList) {
+                let t_com = v.getComponent(AItemRenderer);
+                if (t_com.index == pIndex) {
+                    t_com.selected = true;
+                    break;
+                }
+            }
+            t.node.emit(ListEvent.SELECTIONS_CHANGE, t._selectedIndices.concat());
+        }
+    }
+
+    /**
+     * 移除选中（多选）
+     * @param pIndex 
+     */
+    removeSelection(pIndex: number) {
+        let t = this;
+        let i = t._selectedIndices.indexOf(pIndex);
+        if (i != -1) {
+            t._selectedIndices.splice(i, 1);
+            for (let v of t.itemList) {
+                let t_com = v.getComponent(AItemRenderer);
+                if (t_com.index == pIndex) {
+                    t_com.selected = false;
+                    break;
+                }
+            }
+            t.node.emit(ListEvent.SELECTIONS_CHANGE, t._selectedIndices.concat());
+        }
+    }
+
+    /** 清除所有选中 */
+    clearSelections() {
+        let t = this;
+        t._selectedIndices.length = 0;
+        for (let v of t.itemList) {
+            let t_com = v.getComponent(AItemRenderer);
+            t_com.selected = false;
+        }
+        t.node.emit(ListEvent.SELECTIONS_CHANGE, []);
+    }
+
+    /** 获取选中的index列表 */
+    getSelections(): number[] {
+        let t = this;
+        return t._selectedIndices;
     }
 }
 
@@ -599,8 +686,6 @@ class AVItemVo {
     y = 0;
     width = 0;
     height = 0;
-    // realW = 0;
-    // realH = 0;
     letf = 0;
     right = 0;
     top = 0;
@@ -614,12 +699,10 @@ class DiffVo {
         let t = this;
         t.w += pValue;
     }
-
     addH(pValue: number) {
         let t = this;
         t.h += pValue;
     }
-
     reset() {
         let t = this;
         t.w = 0;

@@ -6,7 +6,7 @@
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
 import item from "../Prefab/Item";
-import AVirtualScrollView from "./core/AVirtualScrollView";
+import AVirtualScrollView, { ListEvent } from "./core/AVirtualScrollView";
 
 const { ccclass, property } = cc._decorator;
 
@@ -38,6 +38,9 @@ export default class NewClass extends cc.Component {
         this.test2.itemRenderer = this.onItemRender.bind(this);
         this.test3.itemRenderer = this.onItemRender.bind(this);
         this.test4.itemRenderer = this.onItemRender.bind(this);
+
+        this.test1.node.on(ListEvent.SELECT_CHANGE, this.onSelectChange, this);
+        this.test1.node.on(ListEvent.SELECTIONS_CHANGE, this.onSelectionsChange, this);
 
         this.test1.numItems = dataL.length;
         // this.test2.numItems = dataL.length;
@@ -97,5 +100,14 @@ export default class NewClass extends cc.Component {
         if (t._dataList) {
             pItem.getComponent(item).setData(t._dataList[pIndex]);
         }
+    }
+
+    private onSelectChange(pIndex: number) {
+        let t = this;
+        console.log("选中了：" + pIndex);
+    }
+    private onSelectionsChange(pSelections: number[]) {
+        let t = this;
+        console.log("选中了：" + pSelections);
     }
 }
