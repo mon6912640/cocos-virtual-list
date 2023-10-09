@@ -93,6 +93,12 @@ export default class NewClass extends cc.Component {
             console.log("当前content位置：" + pos);
         }, this);
 
+        let t_btnScroll = this.node.getChildByName("btnScroll");
+        t_btnScroll.on(cc.Node.EventType.TOUCH_END, () => {
+            let t_index = Math.floor(Math.random() * dataL.length);
+            this.test3.scrollToIndex(t_index);
+            // this.test1.scrollToIndex(t_index);
+        }, this);
     }
 
     private onItemRender(pIndex: number, pItem: cc.Node) {

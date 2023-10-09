@@ -36,7 +36,7 @@ export default class item extends AItemRenderer {
     private _curData: any;
     public setData(pData: any) {
         let t = this;
-        console.log(`setData index=${t.index} data=${pData}`);
+        // console.log(`setData index=${t.index} data=${pData}`);
         t._curData = pData;
         if (pData) {
             t._lblName.string = "" + pData;
@@ -61,7 +61,7 @@ export default class item extends AItemRenderer {
 
     protected onSelectedChanged(pVal: boolean): void {
         let t = this;
-        console.log(`onSelectedChanged index=${t.index} pVal=${pVal}`);
+        // console.log(`onSelectedChanged index=${t.index} pVal=${pVal}`);
         t._bgSelect.active = pVal;
     }
 

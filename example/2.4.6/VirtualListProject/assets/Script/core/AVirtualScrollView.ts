@@ -48,8 +48,6 @@ export default class AVirtualScrollView extends cc.ScrollView {
     private itemList: cc.Node[];
     /**预制体渲染类列表 */
     private itemComList: AItemRenderer[];
-    /**数据列表 */
-    // private dataList: any[];
     /**开始坐标 */
     private startPos: cc.Vec2;
     /**布局*/
@@ -70,6 +68,8 @@ export default class AVirtualScrollView extends cc.ScrollView {
     itemRenderer: (index: number, itemNode: cc.Node) => void;
     private _curSelectedIndex: number = -1;
     private _selectedIndices: number[] = [];
+    /** 滚动的目标index */
+    private _scrollTargetIndex: number = -1;
 
     protected onLoad(): void {
         let t = this;
@@ -104,7 +104,6 @@ export default class AVirtualScrollView extends cc.ScrollView {
     }
 
     protected onDestroy(): void {
-        // this.dataList = null;
         this._numItems = 0;
         this.itemList = null;
         this.itemComList = null;
@@ -148,30 +147,6 @@ export default class AVirtualScrollView extends cc.ScrollView {
         }
     }
 
-    // /**
-    //  * 刷新数据
-    //  * @param data 数据源 单项|队列
-    //  */
-    // public refreshData(data: any | any[]): void {
-    //     if (Array.isArray(data)) {
-    //         // this.dataList = data;
-    //         this._numItems = data.length;
-    //     } else {
-    //         // this.dataList = [data];
-    //         this._numItems = 1;
-    //     }
-
-    //     if (this.interval) {
-    //         clearInterval(this.interval);
-    //     }
-    //     this.addItem();
-    //     this.refreshContentSize();
-    //     this.forcedRefresh = true;
-    //     this.refresh = true;
-    //     this.interval = setInterval(this.refreshItem.bind(this), 1000 / 10); //定时刷新
-    // }
-
-
     /**添加预制体 */
     private addItem(): void {
         let len: number = 0;
@@ -186,7 +161,6 @@ export default class AVirtualScrollView extends cc.ScrollView {
                 len = this.horizontalCount * this.verticalCount;
                 break;
         }
-        // len = Math.min(len, this.dataList.length);
         len = Math.min(len, this._numItems);
 
         let itemListLen = this.itemList.length;
@@ -218,37 +192,23 @@ export default class AVirtualScrollView extends cc.ScrollView {
     /**根据数据数量 改变content宽高 */
     private refreshContentSize(): void {
         let layout: cc.Layout = this.contentLayout;
-        // let dataListLen: number = this.dataList.length;
         let dataListLen = this._numItems;
         switch (this.contentLayout.type) {
             case cc.Layout.Type.VERTICAL:
-                // console.log("this.content.height=" + this.content.height);
-                // if (this._dyncSize) {
-                //     this._dyncSize = false;
                 let t_itemTotalH = 0;
                 for (let i = 0; i < dataListLen; i++) {
                     let t_vo = this.getVo(i);
                     t_itemTotalH += t_vo.height + layout.spacingY;
                 }
                 this.content.height = layout.paddingTop + t_itemTotalH + layout.paddingBottom;
-                // }
-                // else {
-                //     this.content.height = layout.paddingTop + dataListLen * this.itemH + layout.paddingBottom;
-                // }
                 break;
             case cc.Layout.Type.HORIZONTAL:
-                // if (this._dyncSize) {
-                //     this._dyncSize = false;
                 let t_itemTotalW = 0;
                 for (let i = 0; i < dataListLen; i++) {
                     let t_vo = this.getVo(i);
                     t_itemTotalW += t_vo.width + layout.spacingX;
                 }
                 this.content.width = layout.paddingLeft + t_itemTotalW + layout.paddingRight;
-                // }
-                // else {
-                //     this.content.width = layout.paddingLeft + dataListLen * this.itemW + layout.paddingRight;
-                // }
                 break;
             case cc.Layout.Type.GRID:
                 if (this.contentLayout.startAxis == cc.Layout.AxisDirection.HORIZONTAL) {
@@ -260,8 +220,8 @@ export default class AVirtualScrollView extends cc.ScrollView {
         }
     }
 
-    /**刷新预制体位置 和 数据填充 */
-    private refreshItem(): void {
+    /**渲染预制体位置 和 数据填充 */
+    private renderItem(): void {
         if (!this.refresh) {
             return;
         }
@@ -282,18 +242,13 @@ export default class AVirtualScrollView extends cc.ScrollView {
     }
 
     /**刷新水平 */
-    private refreshHorizontal() {
+    private refreshHorizontal(pContenSizeChanged = false) {
         let t_contentRefresh = false;
-        // let start = Math.floor(Math.abs(this.getContentPosition().x) / this.itemW);
         let start = this.getIndexByPos(this.getContentPosition(), this.contentLayout.type);
         if (start < 0 || this.getContentPosition().x > 0) {                //超出边界处理
             start = 0;
         }
         let end = start + this.horizontalCount;
-        // if (end > this.dataList.length) {//超出边界处理
-        //     end = this.dataList.length;
-        //     start = Math.max(end - this.horizontalCount, 0);
-        // }
         if (end > this._numItems) {//超出边界处理
             end = this._numItems;
             start = Math.max(end - this.horizontalCount, 0);
@@ -307,7 +262,6 @@ export default class AVirtualScrollView extends cc.ScrollView {
         for (var i = 0; i < itemListLen; i++) {
             let idx = (start + i) % itemListLen;
             let item = this.itemList[idx];
-            // tempV = this.startPos.x + ((start + i) * this.itemW);
             let t_vo = this.getVo(start + i);
             targetV = t_vo.x;
             let t_needAdjustContentPos = false; //是否需要调整content位置
@@ -343,25 +297,30 @@ export default class AVirtualScrollView extends cc.ScrollView {
         if (t_contentRefresh) {
             this.refreshVoData();
             this.refreshContentSize();
-            this.refreshHorizontal();
+            this.refreshHorizontal(true);
             this.adjustContentPos();
+        }
+        else {
+            this.scheduleOnce(() => {
+                if (this._scrollTargetIndex != -1) {
+                    console.log(`_scrollTargetIndex= ${this._scrollTargetIndex}`);
+                    console.log(`重新滚动定位`);
+                    this.doScrollToIndex(this._scrollTargetIndex);
+                    this._scrollTargetIndex = -1;
+                }
+            }, 0);
         }
     }
 
     /**刷新垂直 */
-    private refreshVertical(): void {
+    private refreshVertical(pContenSizeChanged = false): void {
         let t_contentRefresh = false;
-        // let start = Math.floor(Math.abs(this.getContentPosition().y) / this.itemH);
         let start = this.getIndexByPos(this.getContentPosition(), this.contentLayout.type);
         if (start < 0 || this.getContentPosition().y < 0) {
             start = 0;
         }
 
         let end = start + this.verticalCount;
-        // if (end > this.dataList.length) {
-        //     end = this.dataList.length;
-        //     start = Math.max(end - this.verticalCount, 0);
-        // }
         if (end > this._numItems) {
             end = this._numItems;
             start = Math.max(end - this.verticalCount, 0);
@@ -373,11 +332,9 @@ export default class AVirtualScrollView extends cc.ScrollView {
 
         let targetV = 0;
         let itemListLen = this.itemList.length;
-        // console.log("itemListLen=" + itemListLen);
         for (var i = 0; i < itemListLen; i++) {
             let idx = (start + i) % itemListLen;
             let item = this.itemList[idx];
-            // tempV = this.startPos.y + (-(start + i) * this.itemH);
             let t_vo = this.getVo(start + i);
             targetV = t_vo.y;
             let t_needAdjustContentPos = false; //是否需要调整content位置
@@ -414,10 +371,21 @@ export default class AVirtualScrollView extends cc.ScrollView {
             }
         }
         if (t_contentRefresh) {
+            console.log(`需要调整content尺寸`);
             this.refreshVoData();
             this.refreshContentSize();
-            this.refreshVertical();
+            this.refreshVertical(true);
             this.adjustContentPos();
+        }
+        else {
+            this.scheduleOnce(() => {
+                if (this._scrollTargetIndex != -1) {
+                    console.log(`_scrollTargetIndex= ${this._scrollTargetIndex}`);
+                    console.log(`重新滚动定位`);
+                    this.doScrollToIndex(this._scrollTargetIndex);
+                    this._scrollTargetIndex = -1;
+                }
+            }, 0);
         }
     }
 
@@ -440,10 +408,6 @@ export default class AVirtualScrollView extends cc.ScrollView {
         }
 
         let end = start + this.horizontalCount * this.verticalCount;
-        // if (end > this.dataList.length) {
-        //     end = this.dataList.length;
-        //     start = Math.max(end - this.horizontalCount * this.verticalCount, 0);
-        // }
         if (end > this._numItems) {
             end = this._numItems;
             start = Math.max(end - this.horizontalCount * this.verticalCount, 0);
@@ -478,13 +442,14 @@ export default class AVirtualScrollView extends cc.ScrollView {
     private adjustContentPos() {
         let t = this;
         if (t._diffVo.w == 0 && t._diffVo.h == 0)
-            return;
+            return false;
         let t_contentPos = t.getContentPosition();
         t_contentPos.x -= t._diffVo.w;
         t_contentPos.y += t._diffVo.h; //坐标系不同
         t.setContentPosition(t_contentPos);
-        console.log(`t._diffVo.w= ${t._diffVo.w}, t._diffVo.h= ${t._diffVo.h}`);
+        console.log(`adjustContentPos() -- t._diffVo.w= ${t._diffVo.w}, t._diffVo.h= ${t._diffVo.h}`);
         t._diffVo.reset();
+        return true;
     }
 
     private _voList: AVItemVo[] = [];
@@ -602,7 +567,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
         t.refreshContentSize();
         t.forcedRefresh = true;
         t.refresh = true;
-        t.interval = setInterval(t.refreshItem.bind(this), 1000 / 10); //定时刷新
+        t.interval = setInterval(t.renderItem.bind(this), 1000 / 10); //定时刷新
     }
 
     get selectedIndex(): number {
@@ -676,6 +641,52 @@ export default class AVirtualScrollView extends cc.ScrollView {
     getSelections(): number[] {
         let t = this;
         return t._selectedIndices;
+    }
+
+    /**
+     * 定位到指定index
+     * @param pIndex 
+     * @returns 
+     */
+    scrollToIndex(pIndex: number) {
+        let t = this;
+        if (t.contentLayout.type == cc.Layout.Type.GRID) //暂不支持网格布局
+            return;
+        if (pIndex < 0 || pIndex >= t._numItems)
+            return;
+        if (t._scrollTargetIndex == pIndex)
+            return;
+        t._scrollTargetIndex = pIndex;
+        t.doScrollToIndex(pIndex);
+    }
+
+    private doScrollToIndex(pIndex: number) {
+        let t = this;
+        t.stopAutoScroll(); //停止本来的自动滚动
+        let t_dir = 1;
+        let t_targetvo = t.getVo(pIndex);
+        let t_contentPos = t.getContentPosition();
+        console.log(`scrollToIndex= ${pIndex}, 
+        t_targetvo.x= ${t_targetvo.x}, 
+        t_targetvo.y= ${t_targetvo.y},
+        t_targetvo.letf= ${t_targetvo.letf},
+        t_targetvo.top= ${t_targetvo.top},
+        `);
+        console.log(`contentPos= ${t_contentPos.x}, ${t_contentPos.y}`);
+        switch (t.contentLayout.type) {
+            case cc.Layout.Type.HORIZONTAL:
+                t_dir = 1;
+                t_contentPos.x = -t_dir * t_targetvo.letf;
+                break;
+            case cc.Layout.Type.VERTICAL:
+                t_dir = -1;
+                t_contentPos.y = t_dir * t_targetvo.top;
+                break;
+            case cc.Layout.Type.GRID:
+                break;
+        }
+        t.setContentPosition(t_contentPos);
+        console.log(`contentPos= ${t_contentPos.x}, ${t_contentPos.y}`);
     }
 }
 
