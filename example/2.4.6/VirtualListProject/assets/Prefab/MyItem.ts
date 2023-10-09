@@ -1,4 +1,4 @@
-import { MyItemVo } from "../Script/SceneTest";
+import { MyItemVoTest } from "../Script/SceneTest";
 import AItemRenderer from "../Script/core/AItemRenerer";
 
 const { ccclass, property } = cc._decorator;
@@ -34,8 +34,8 @@ export class MyItem extends AItemRenderer {
 		t._nodelist = [t._btn0, t._btn1, t._btn2];
 	}
 
-	private _curData: MyItemVo;
-	public setData(pData: MyItemVo) {
+	private _curData: MyItemVoTest;
+	public setData(pData: MyItemVoTest) {
 		let t = this;
 		t._curData = pData;
 		if (pData) {
