@@ -65,7 +65,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
     private _diffVo: DiffVo;
 
     private _numItems: number = 0;
-    itemRenderer: (index: number, itemNode: cc.Node) => void;
+    itemRenderer: (itemNode: cc.Node, index: number) => void;
     private _curSelectedIndex: number = -1;
     private _selectedIndices: number[] = [];
     /** 滚动的目标index */
@@ -93,6 +93,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
         //垂直、水平最大预制体数量
         t.horizontalCount = Math.ceil(t.node.width / t.itemW) + 1;
         t.verticalCount = Math.ceil(t.node.height / t.itemH) + 1;
+        console.log(`t.horizontalCount= ${t.horizontalCount}, t.verticalCount= ${t.verticalCount}`);
 
         if (t.contentLayout.type == cc.Layout.Type.GRID) {
             if (t.contentLayout.startAxis == cc.Layout.AxisDirection.HORIZONTAL) {
@@ -276,7 +277,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
                 item.x = targetV;
                 item.getComponent(AItemRenderer).index = t_vo.index;
                 if (this.itemRenderer) {
-                    this.itemRenderer(start + i, item); // 传递索引和item
+                    this.itemRenderer(item, start + i); // 传递索引和item
                 }
                 if (t_com.index == this._curSelectedIndex || this._selectedIndices.indexOf(t_com.index) != -1) {
                     t_com.selected = true;
@@ -351,7 +352,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
 
                 // console.log(`t_vo.y= ${t_vo.y}`);
                 if (this.itemRenderer) {
-                    this.itemRenderer(start + i, item); // 传递索引和item
+                    this.itemRenderer(item, start + i); // 传递索引和item
                 }
                 if (t_com.index == this._curSelectedIndex || this._selectedIndices.indexOf(t_com.index) != -1) {
                     t_com.selected = true;
@@ -432,7 +433,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
                 item.x = tempX;
                 item.y = tempY;
                 if (this.itemRenderer) {
-                    this.itemRenderer(start + i, item); // 传递索引和item
+                    this.itemRenderer(item, start + i); // 传递索引和item
                 }
             }
         }

@@ -21,6 +21,8 @@ export default class NewClass extends cc.Component {
     test3: AVirtualScrollView = null;
     @property(AVirtualScrollView)
     test4: AVirtualScrollView = null;
+    @property(AVirtualScrollView)
+    mylist: AVirtualScrollView = null;
 
     private _dataList: string[] = null;
 
@@ -99,9 +101,10 @@ export default class NewClass extends cc.Component {
             this.test3.scrollToIndex(t_index);
             // this.test1.scrollToIndex(t_index);
         }, this);
+
     }
 
-    private onItemRender(pIndex: number, pItem: cc.Node) {
+    private onItemRender(pItem: cc.Node, pIndex: number) {
         let t = this;
         if (t._dataList) {
             pItem.getComponent(item).setData(t._dataList[pIndex]);
