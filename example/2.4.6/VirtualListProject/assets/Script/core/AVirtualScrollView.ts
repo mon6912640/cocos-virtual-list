@@ -131,7 +131,6 @@ export default class AVirtualScrollView extends cc.ScrollView {
     /**选中数据 */
     private onItemTap(pIndex: number): void {
         let t = this;
-        console.log(`AVirtualScrollView onItemTap data= ${pIndex}`);
         t.callback && t.callback.call(t.cbThis, pIndex);
         switch (t.selectMode) {
             case SelectMode.Single:

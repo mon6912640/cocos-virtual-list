@@ -94,6 +94,18 @@ export class MyItem extends AItemRenderer {
 		t._lb.node.active = true;
 	}
 
+	protected onSelectedChanged(pVal: boolean): void {
+		let t = this;
+		if (!t._curData)
+			return;
+		if (t._curData.type == 0) {
+			t._arrow0.active = !pVal;
+			t._arrow1.active = pVal;
+		}
+		t._bg0.active = !pVal;
+		t._bg1.active = pVal;
+	}
+
 	public closePanel() {
 		this.setData(null);
 	}

@@ -34,7 +34,7 @@ export default class AItemRenderer extends cc.Component {
     }
 
     /** 选中处理 */
-    protected onSelectedChanged(pVal:boolean): void {
+    protected onSelectedChanged(pVal: boolean): void {
         //供子类重写
     }
 
@@ -48,9 +48,9 @@ export default class AItemRenderer extends cc.Component {
         this._cbThis = pCbThis;
         if (this.node) {
             if (this.node.hasEventListener(cc.Node.EventType.TOUCH_END)) {
-                this.node.off(cc.Node.EventType.TOUCH_END, this.onClickCallback, this);
+                this.node.off(cc.Node.EventType.TOUCH_END, this.onClickCallback, this, true);
             }
-            this.node.on(cc.Node.EventType.TOUCH_END, this.onClickCallback, this);
+            this.node.on(cc.Node.EventType.TOUCH_END, this.onClickCallback, this, true);
         }
     }
 
@@ -61,7 +61,6 @@ export default class AItemRenderer extends cc.Component {
     protected onClickCallback(e: cc.Event): void {
         let t = this;
         if (t._callback) {
-            console.log(`点击了 index=${t.index}`);
             t._callback.call(t._cbThis, t.index);
         }
     }

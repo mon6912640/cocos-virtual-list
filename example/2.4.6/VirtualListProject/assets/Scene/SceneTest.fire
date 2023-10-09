@@ -469,7 +469,7 @@
     "node": {
       "__id__": 6
     },
-    "_enabled": false,
+    "_enabled": true,
     "_materials": [
       {
         "__uuid__": "eca5d2f2-8ef6-41c2-bbe6-f9c79d09c432"
@@ -597,6 +597,12 @@
     "_enabled": true,
     "mylist": {
       "__id__": 11
+    },
+    "cfg_stick": {
+      "__uuid__": "6ff620d0-5bd0-4926-b6be-ca4191cbf1f5"
+    },
+    "cfg_stick_type": {
+      "__uuid__": "f8a67491-3e53-4000-8ede-4e7416124fb9"
     },
     "_id": "7ew9OiZLVAAoyiQp/jyIhb"
   }
