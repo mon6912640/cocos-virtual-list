@@ -134,14 +134,14 @@ export default class AVirtualScrollView extends cc.ScrollView {
         t.callback && t.callback.call(t.cbThis, pIndex);
         switch (t.selectMode) {
             case SelectMode.Single:
-                t.selectedIndex = pIndex;
+                t.setSelectedIndex(pIndex, true);
                 break;
             case SelectMode.Multiple:
                 if (t._selectedIndices.indexOf(pIndex) == -1) {
-                    t.addSeletion(pIndex);
+                    t.addSeletion(pIndex, true);
                 }
                 else {
-                    t.removeSelection(pIndex);
+                    t.removeSelection(pIndex, true);
                 }
                 break;
         }
@@ -574,8 +574,14 @@ export default class AVirtualScrollView extends cc.ScrollView {
         let t = this;
         return t._curSelectedIndex;
     }
-    /** 选中（单选） */
-    set selectedIndex(value: number) {
+
+    /**
+     * 选中（单选）
+     * @param value 
+     * @param pDispatchEvent 是否抛出事件，默认false
+     * @returns 
+     */
+    setSelectedIndex(value: number, pDispatchEvent = false) {
         let t = this;
         if (t._curSelectedIndex == value)
             return;
@@ -584,14 +590,17 @@ export default class AVirtualScrollView extends cc.ScrollView {
             let t_com = t.itemList[i].getComponent(AItemRenderer);
             t_com.selected = t_com.index == t._curSelectedIndex;
         }
-        t.node.emit(ListEvent.SELECT_CHANGE, t._curSelectedIndex);
+        if (pDispatchEvent) {
+            t.node.emit(ListEvent.SELECT_CHANGE, t._curSelectedIndex);
+        }
     }
 
     /**
      * 添加选中（多选）
      * @param pIndex 
+     * @param pDispatchEvent 是否抛出事件，默认false
      */
-    addSeletion(pIndex: number) {
+    addSeletion(pIndex: number, pDispatchEvent = false) {
         let t = this;
         if (t._selectedIndices.indexOf(pIndex) == -1) {
             t._selectedIndices.push(pIndex);
@@ -602,15 +611,17 @@ export default class AVirtualScrollView extends cc.ScrollView {
                     break;
                 }
             }
-            t.node.emit(ListEvent.SELECTIONS_CHANGE, t._selectedIndices.concat());
+            if (pDispatchEvent)
+                t.node.emit(ListEvent.SELECTIONS_CHANGE, t._selectedIndices.concat());
         }
     }
 
     /**
      * 移除选中（多选）
      * @param pIndex 
+     * @param pDispatchEvent 是否抛出事件，默认false
      */
-    removeSelection(pIndex: number) {
+    removeSelection(pIndex: number, pDispatchEvent = false) {
         let t = this;
         let i = t._selectedIndices.indexOf(pIndex);
         if (i != -1) {
@@ -622,19 +633,24 @@ export default class AVirtualScrollView extends cc.ScrollView {
                     break;
                 }
             }
-            t.node.emit(ListEvent.SELECTIONS_CHANGE, t._selectedIndices.concat());
+            if (pDispatchEvent)
+                t.node.emit(ListEvent.SELECTIONS_CHANGE, t._selectedIndices.concat());
         }
     }
 
-    /** 清除所有选中 */
-    clearSelections() {
+    /**
+     * 清除所有选中
+     * @param pDispatchEvent 是否抛出事件，默认false
+     */
+    clearSelections(pDispatchEvent = false) {
         let t = this;
         t._selectedIndices.length = 0;
         for (let v of t.itemList) {
             let t_com = v.getComponent(AItemRenderer);
             t_com.selected = false;
         }
-        t.node.emit(ListEvent.SELECTIONS_CHANGE, []);
+        if (pDispatchEvent)
+            t.node.emit(ListEvent.SELECTIONS_CHANGE, []);
     }
 
     /** 获取选中的index列表 */

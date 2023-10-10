@@ -1,5 +1,7 @@
-import { MyItemVoTest } from "../Script/SceneTest";
 import AItemRenderer from "../Script/core/AItemRenerer";
+import ItemTagVo from "../Script/data/ItemTagVo";
+import MyItemVo from "../Script/data/MyItemVo";
+import VTreeNode from "../Script/data/VTreeNode";
 
 const { ccclass, property } = cc._decorator;
 
@@ -20,6 +22,8 @@ export class MyItem extends AItemRenderer {
 
 	private _curNode: cc.Node = null;
 
+	private _itemType = 0;
+
 	onLoad(): void {
 		let t = this;
 
@@ -34,14 +38,29 @@ export class MyItem extends AItemRenderer {
 		t._nodelist = [t._btn0, t._btn1, t._btn2];
 	}
 
-	private _curData: MyItemVoTest;
-	public setData(pData: MyItemVoTest) {
+	private _curData: VTreeNode;
+	public setData(pData: VTreeNode) {
 		let t = this;
 		t._curData = pData;
 		if (pData) {
-			let t_type = pData.type;
-			console.log(`setData index=${t.index} data=${pData} type=${t_type}`);
+			let t_type = 0;
+			if (pData.data instanceof ItemTagVo) {
+				t_type = pData.data.itemType;
+			}
+			else if (pData.data instanceof MyItemVo) {
+				t_type = 2;
+			}
+			t._itemType = t_type;
+			// console.log(`setData index=${t.index} data=${pData} type=${t_type}`);
 			t.changeNode(t_type);
+
+			let t_vo = pData.data;
+			if (t_vo instanceof ItemTagVo) {
+				t._lb.string = t_vo.cfg.Title;
+			}
+			else if (t_vo instanceof MyItemVo) {
+				t._lb.string = t_vo.cfg.Desc;
+			}
 		}
 		else {
 		}
@@ -98,7 +117,7 @@ export class MyItem extends AItemRenderer {
 		let t = this;
 		if (!t._curData)
 			return;
-		if (t._curData.type == 0) {
+		if (t._itemType == 0) {
 			t._arrow0.active = !pVal;
 			t._arrow1.active = pVal;
 		}
