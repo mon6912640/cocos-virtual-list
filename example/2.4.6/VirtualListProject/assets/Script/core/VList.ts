@@ -17,7 +17,7 @@ export enum ListEvent {
 
 /**
  * 虚拟滚动视图 扩展cc.ScrollView 支持item动态尺寸
- * 渲染预制体必需挂载 AItemRenderer子类
+ * 渲染预制体必需挂载继承VListItem子类
  * @author slf
  */
 @ccclass
@@ -250,7 +250,7 @@ export default class VList extends cc.ScrollView {
     private refreshHorizontal(pContenSizeChanged = false) {
         let t_contentRefresh = false;
         let start = this.getIndexByPos(this.getContentPosition(), this.contentLayout.type);
-        if (start < 0 || this.getContentPosition().x > 0) {                //超出边界处理
+        if (start < 0 || this.getContentPosition().x > 0) { //超出边界处理
             start = 0;
         }
         let end = start + this.horizontalCount;
@@ -258,9 +258,6 @@ export default class VList extends cc.ScrollView {
             end = this._numItems;
             start = Math.max(end - this.horizontalCount, 0);
         }
-
-        // console.log("=====================================");
-        // console.log("start=" + start + " end=" + end);
 
         let targetV = 0;
         let itemListLen = this.itemList.length;
@@ -271,7 +268,7 @@ export default class VList extends cc.ScrollView {
             targetV = t_vo.x;
             let t_needAdjustContentPos = false; //是否需要调整content位置
             if (item.x != targetV || this.forcedRefresh) {
-                console.log("修改数据 " + (start + i))
+                // console.log("修改数据 " + (start + i))
                 let t_com = item.getComponent(VListItem);
                 t_com.index = t_vo.index;
                 if (targetV < item.x) {
@@ -308,8 +305,8 @@ export default class VList extends cc.ScrollView {
         else {
             this.scheduleOnce(() => {
                 if (this._scrollTargetIndex != -1) {
-                    console.log(`_scrollTargetIndex= ${this._scrollTargetIndex}`);
-                    console.log(`重新滚动定位`);
+                    // console.log(`_scrollTargetIndex= ${this._scrollTargetIndex}`);
+                    // console.log(`重新滚动定位`);
                     this.doScrollToIndex(this._scrollTargetIndex);
                     this._scrollTargetIndex = -1;
                 }
@@ -331,10 +328,6 @@ export default class VList extends cc.ScrollView {
             start = Math.max(end - this.verticalCount, 0);
         }
 
-        // console.log("=====================================");
-        // console.log("this.getContentPosition().y=" + this.getContentPosition().y);
-        // console.log("start=" + start + " end=" + end);
-
         let targetV = 0;
         let itemListLen = this.itemList.length;
         for (var i = 0; i < itemListLen; i++) {
@@ -344,7 +337,7 @@ export default class VList extends cc.ScrollView {
             targetV = t_vo.y;
             let t_needAdjustContentPos = false; //是否需要调整content位置
             if (item.y != targetV || this.forcedRefresh) {
-                console.log("修改数据 " + (start + i))
+                // console.log("修改数据 " + (start + i))
                 let t_com = item.getComponent(VListItem);
                 t_com.index = t_vo.index;
                 if (targetV > item.y) {
@@ -379,7 +372,7 @@ export default class VList extends cc.ScrollView {
             }
         }
         if (t_contentRefresh) {
-            console.log(`需要调整content尺寸`);
+            // console.log(`需要调整content尺寸`);
             this.refreshVoData();
             this.refreshContentSize();
             this.refreshVertical(true);
@@ -388,8 +381,8 @@ export default class VList extends cc.ScrollView {
         else {
             this.scheduleOnce(() => {
                 if (this._scrollTargetIndex != -1) {
-                    console.log(`_scrollTargetIndex= ${this._scrollTargetIndex}`);
-                    console.log(`重新滚动定位`);
+                    // console.log(`_scrollTargetIndex= ${this._scrollTargetIndex}`);
+                    // console.log(`重新滚动定位`);
                     this.doScrollToIndex(this._scrollTargetIndex);
                     this._scrollTargetIndex = -1;
                 }
@@ -690,13 +683,13 @@ export default class VList extends cc.ScrollView {
         let t_dir = 1;
         let t_targetvo = t.getVo(pIndex);
         let t_contentPos = t.getContentPosition();
-        console.log(`scrollToIndex= ${pIndex}, 
-        t_targetvo.x= ${t_targetvo.x}, 
-        t_targetvo.y= ${t_targetvo.y},
-        t_targetvo.letf= ${t_targetvo.letf},
-        t_targetvo.top= ${t_targetvo.top},
-        `);
-        console.log(`contentPos= ${t_contentPos.x}, ${t_contentPos.y}`);
+        // console.log(`scrollToIndex= ${pIndex}, 
+        // t_targetvo.x= ${t_targetvo.x}, 
+        // t_targetvo.y= ${t_targetvo.y},
+        // t_targetvo.letf= ${t_targetvo.letf},
+        // t_targetvo.top= ${t_targetvo.top},
+        // `);
+        // console.log(`contentPos= ${t_contentPos.x}, ${t_contentPos.y}`);
         switch (t.contentLayout.type) {
             case cc.Layout.Type.HORIZONTAL:
                 t_dir = 1;

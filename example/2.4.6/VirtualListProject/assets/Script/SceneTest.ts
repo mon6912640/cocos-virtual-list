@@ -194,10 +194,12 @@ export class SceneTest extends cc.Component {
 			if (t_targeNodeUid) {
 				let t_curNode = t.treeVoMap[t_targeNodeUid];
 				t.mylist.addSeletion(t_curNode.listIndex);
+				let t_itemvo = t_curNode.data as MyItemVo;
+				console.log(`选中了${t_itemvo.cfg.Desc}`);
 			}
 		}
 		else if (t_vo instanceof MyItemVo) {
-			console.log(`点击了${t_vo.cfg.Desc}`);
+			console.log(`选中了${t_vo.cfg.Desc}`);
 			t.mylist.clearSelections(); //清空选中
 			t.mylist.addSeletion(pIndex);
 		}
