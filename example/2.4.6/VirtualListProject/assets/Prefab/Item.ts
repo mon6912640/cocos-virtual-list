@@ -5,13 +5,13 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import AItemRenderer from "../Script/core/AItemRenerer";
+import VListItem from "../Script/core/VListItem";
 
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export default class item extends AItemRenderer {
+export default class item extends VListItem {
 
 
     private _defaultH = 0;

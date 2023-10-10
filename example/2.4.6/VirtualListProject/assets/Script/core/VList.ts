@@ -1,4 +1,4 @@
-import AItemRenderer from "./AItemRenerer";
+import VListItem from "./VListItem";
 
 const { ccclass, property } = cc._decorator;
 
@@ -21,7 +21,7 @@ export enum ListEvent {
  * @author slf
  */
 @ccclass
-export default class AVirtualScrollView extends cc.ScrollView {
+export default class VList extends cc.ScrollView {
     /**渲染预制体必需挂载 AItemRenderer子类 */
     @property({ type: cc.Prefab, serializable: true, displayName: "渲染预制体" })
     itemRenderPF: cc.Prefab = null;
@@ -47,7 +47,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
     /**预制体列表 */
     private itemList: cc.Node[];
     /**预制体渲染类列表 */
-    private itemComList: AItemRenderer[];
+    private itemComList: VListItem[];
     /**开始坐标 */
     private startPos: cc.Vec2;
     /**布局*/
@@ -170,7 +170,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
                 this.content.addChild(child);
                 child.active = false;
                 this.itemList.push(child);
-                let itemCom = child.getComponent(AItemRenderer);
+                let itemCom = child.getComponent(VListItem);
                 this.itemComList.push(itemCom);
 
                 if (itemCom.isClick) {
@@ -272,14 +272,14 @@ export default class AVirtualScrollView extends cc.ScrollView {
             let t_needAdjustContentPos = false; //是否需要调整content位置
             if (item.x != targetV || this.forcedRefresh) {
                 console.log("修改数据 " + (start + i))
-                let t_com = item.getComponent(AItemRenderer);
+                let t_com = item.getComponent(VListItem);
                 t_com.index = t_vo.index;
                 if (targetV < item.x) {
                     //item往前移动的情况需要重新计算content位置
                     t_needAdjustContentPos = true;
                 }
                 item.x = targetV;
-                item.getComponent(AItemRenderer).index = t_vo.index;
+                item.getComponent(VListItem).index = t_vo.index;
                 if (this.itemRenderer) {
                     this.itemRenderer(item, start + i); // 传递索引和item
                 }
@@ -345,7 +345,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
             let t_needAdjustContentPos = false; //是否需要调整content位置
             if (item.y != targetV || this.forcedRefresh) {
                 console.log("修改数据 " + (start + i))
-                let t_com = item.getComponent(AItemRenderer);
+                let t_com = item.getComponent(VListItem);
                 t_com.index = t_vo.index;
                 if (targetV > item.y) {
                     //item往前移动的情况需要重新计算content位置
@@ -595,7 +595,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
             return;
         t._curSelectedIndex = value;
         for (let i = 0; i < t.itemList.length; i++) {
-            let t_com = t.itemList[i].getComponent(AItemRenderer);
+            let t_com = t.itemList[i].getComponent(VListItem);
             t_com.selected = t_com.index == t._curSelectedIndex;
         }
         if (pDispatchEvent) {
@@ -613,7 +613,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
         if (t._selectedIndices.indexOf(pIndex) == -1) {
             t._selectedIndices.push(pIndex);
             for (let v of t.itemList) {
-                let t_com = v.getComponent(AItemRenderer);
+                let t_com = v.getComponent(VListItem);
                 if (t_com.index == pIndex) {
                     t_com.selected = true;
                     break;
@@ -635,7 +635,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
         if (i != -1) {
             t._selectedIndices.splice(i, 1);
             for (let v of t.itemList) {
-                let t_com = v.getComponent(AItemRenderer);
+                let t_com = v.getComponent(VListItem);
                 if (t_com.index == pIndex) {
                     t_com.selected = false;
                     break;
@@ -654,7 +654,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
         let t = this;
         t._selectedIndices.length = 0;
         for (let v of t.itemList) {
-            let t_com = v.getComponent(AItemRenderer);
+            let t_com = v.getComponent(VListItem);
             t_com.selected = false;
         }
         if (pDispatchEvent)

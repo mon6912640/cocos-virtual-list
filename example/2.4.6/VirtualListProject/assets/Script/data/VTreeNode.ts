@@ -110,4 +110,18 @@ export default class VTreeNode {
 			}
 		}
 	}
+
+	/** 折叠除自己外的兄弟节点 */
+	foldBrother() {
+		let t = this;
+		let t_parent = t.parent;
+		if (!t_parent)
+			return;
+		for (let i = 0; i < t_parent.children.length; i++) {
+			let t_child = t_parent.children[i];
+			if(t_child != t){
+				t_child.foldAll();
+			}
+		}
+	}
 }

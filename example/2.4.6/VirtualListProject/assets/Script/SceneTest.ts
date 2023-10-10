@@ -1,5 +1,5 @@
 import { MyItem } from "../Prefab/MyItem";
-import AVirtualScrollView, { ListEvent } from "./core/AVirtualScrollView";
+import VList, { ListEvent } from "./core/VList";
 import { Cfg_Stick, Cfg_StickType } from "./data/CFG";
 import ItemTagVo from "./data/ItemTagVo";
 import MyItemVo from "./data/MyItemVo";
@@ -12,8 +12,8 @@ export class SceneTest extends cc.Component {
 
 	private _dataList: VTreeNode[] = null;
 
-	@property(AVirtualScrollView)
-	mylist: AVirtualScrollView = null;
+	@property(VList)
+	mylist: VList = null;
 
 	@property(cc.JsonAsset)
 	cfg_stick: cc.JsonAsset = null;
@@ -160,8 +160,6 @@ export class SceneTest extends cc.Component {
 		}
 	}
 
-	private _targetNodeUid = 0;
-
 	/** item点击处理（区别于选中） */
 	private onItemClick(pIndex: number) {
 		let t = this;
@@ -170,40 +168,38 @@ export class SceneTest extends cc.Component {
 			return;
 		let t_tnode = t._dataList[pIndex];
 		let t_vo = t_tnode.data;
+		let t_targeNodeUid = 0;
 		if (t_vo instanceof ItemTagVo) {
 			if (t_tnode.isOpen()) { //已经打开的折叠
 				t_tnode.open = false; //折叠
+				t_tnode.foldAll(); //折叠所有子节点
 			}
 			else { //未打开的展开
 				//选中最近的末节点
+				t_tnode.foldBrother(); //折叠兄弟节点
 				let t_curNode = t_tnode;
-				while (t_curNode && !t_curNode.isEndNode()) {
+				while (t_curNode) {
 					t_curNode.open = true;
 					t_curNode = t_curNode.children[0];
+					if (t_curNode.isEndNode())
+						break;
 				}
 				if (t_curNode && t_curNode.data instanceof MyItemVo) {
-					t._targetNodeUid = t_curNode.uid;
-					t.mylist.clearSelections(); //清空选中
-					t.mylist.addSeletion(t_curNode.listIndex);
-					while (t_curNode.parent && t_curNode.parent.depth >= 0) {
-						t_curNode = t_curNode.parent;
-						t.mylist.addSeletion(t_curNode.listIndex);
-					}
+					t_targeNodeUid = t_curNode.uid;
 				}
 			}
-			t.rebuildDataList();
+			t.rebuildDataList(); //重建列表数据
 			t.mylist.numItems = t._dataList.length;
-			console.log(`t._dataList.length=${t._dataList.length}`);
+			t.mylist.clearSelections(); //清空选中
+			if (t_targeNodeUid) {
+				let t_curNode = t.treeVoMap[t_targeNodeUid];
+				t.mylist.addSeletion(t_curNode.listIndex);
+			}
 		}
 		else if (t_vo instanceof MyItemVo) {
 			console.log(`点击了${t_vo.cfg.Desc}`);
 			t.mylist.clearSelections(); //清空选中
 			t.mylist.addSeletion(pIndex);
-			let t_curNode = t_tnode;
-			while (t_curNode.parent && t_curNode.parent.depth >= 0) {
-				t_curNode = t_curNode.parent;
-				t.mylist.addSeletion(t_curNode.listIndex);
-			}
 		}
 	}
 

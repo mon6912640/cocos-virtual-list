@@ -6,23 +6,21 @@
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
 import item from "../Prefab/Item";
-import AVirtualScrollView, { ListEvent } from "./core/AVirtualScrollView";
+import VList, { ListEvent } from "./core/VList";
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
 export default class NewClass extends cc.Component {
 
-    @property(AVirtualScrollView)
-    test1: AVirtualScrollView = null;
-    @property(AVirtualScrollView)
-    test2: AVirtualScrollView = null;
-    @property(AVirtualScrollView)
-    test3: AVirtualScrollView = null;
-    @property(AVirtualScrollView)
-    test4: AVirtualScrollView = null;
-    @property(AVirtualScrollView)
-    mylist: AVirtualScrollView = null;
+    @property(VList)
+    test1: VList = null;
+    @property(VList)
+    test2: VList = null;
+    @property(VList)
+    test3: VList = null;
+    @property(VList)
+    test4: VList = null;
 
     private _dataList: string[] = null;
 

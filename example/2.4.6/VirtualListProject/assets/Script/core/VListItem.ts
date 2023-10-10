@@ -4,7 +4,7 @@ const { ccclass, property } = cc._decorator;
  * @author slf
  *  */
 @ccclass
-export default class AItemRenderer extends cc.Component {
+export default class VListItem extends cc.Component {
     @property({ displayName: "是否添加点击事件" })
     isClick: boolean = false;
 

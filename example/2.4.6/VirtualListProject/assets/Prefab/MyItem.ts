@@ -1,4 +1,4 @@
-import AItemRenderer from "../Script/core/AItemRenerer";
+import VListItem from "../Script/core/VListItem";
 import ItemTagVo from "../Script/data/ItemTagVo";
 import MyItemVo from "../Script/data/MyItemVo";
 import VTreeNode from "../Script/data/VTreeNode";
@@ -6,7 +6,7 @@ import VTreeNode from "../Script/data/VTreeNode";
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export class MyItem extends AItemRenderer {
+export class MyItem extends VListItem {
 
 	private _btn0: cc.Node = null;
 	private _btn1: cc.Node = null;
@@ -56,9 +56,12 @@ export class MyItem extends AItemRenderer {
 
 			let t_vo = pData.data;
 			if (t_vo instanceof ItemTagVo) {
+				//标签
 				t._lb.string = t_vo.cfg.Title;
+				t.doSelect(pData.open);
 			}
 			else if (t_vo instanceof MyItemVo) {
+				//数据
 				t._lb.string = t_vo.cfg.Desc;
 			}
 		}
@@ -115,8 +118,13 @@ export class MyItem extends AItemRenderer {
 
 	protected onSelectedChanged(pVal: boolean): void {
 		let t = this;
-		if (!t._curData)
+		if (!t._curData || !(t._curData.data instanceof MyItemVo))
 			return;
+		t.doSelect(pVal)
+	}
+
+	private doSelect(pVal: boolean): void {
+		let t = this;
 		if (t._itemType == 0) {
 			t._arrow0.active = !pVal;
 			t._arrow1.active = pVal;
