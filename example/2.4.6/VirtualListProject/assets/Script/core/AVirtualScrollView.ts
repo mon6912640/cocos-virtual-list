@@ -30,7 +30,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
     selectMode: SelectMode = SelectMode.None;
 
     /**子项点击 回调函数  回调作用域*/
-    protected callback: Function;
+    protected callback: (pIndex: number) => void;
     protected cbThis: any;
 
     /**最大渲染预制体 垂直数量 */
@@ -123,7 +123,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
     * @param cb 回调
     * @param cbT 作用域
     */
-    public setTouchItemCallback(cb: Function, cbT: any): void {
+    public setTouchItemCallback(cb: (pIndex: number) => void, cbT: any): void {
         this.callback = cb;
         this.cbThis = cbT;
     }
@@ -168,6 +168,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
             for (var i = itemListLen; i < len; i++) {
                 let child = this.itemPool.length > 0 ? this.itemPool.shift() : cc.instantiate(this.itemRenderPF);
                 this.content.addChild(child);
+                child.active = false;
                 this.itemList.push(child);
                 let itemCom = child.getComponent(AItemRenderer);
                 this.itemComList.push(itemCom);
@@ -180,10 +181,14 @@ export default class AVirtualScrollView extends cc.ScrollView {
             let cL: number = this.content.childrenCount;
             while (cL > len) {
                 let item = this.itemList[cL - 1];
-                this.content.removeChild(item);
+                // this.content.removeChild(item);
+                item.removeFromParent();
                 this.itemList.splice(cL - 1, 1);
                 this.itemComList.splice(cL - 1, 1);
                 this.itemPool.push(item);
+                item.x = 0;
+                item.y = 0;
+                item.active = false;
                 cL = this.content.childrenCount;
             }
         }
@@ -350,14 +355,17 @@ export default class AVirtualScrollView extends cc.ScrollView {
                 // console.log(`index= ${start + i}, item.y= ${item.y}`);
 
                 // console.log(`t_vo.y= ${t_vo.y}`);
-                if (this.itemRenderer) {
-                    this.itemRenderer(item, start + i); // 传递索引和item
-                }
-                if (t_com.index == this._curSelectedIndex || this._selectedIndices.indexOf(t_com.index) != -1) {
-                    t_com.selected = true;
-                }
-                else {
-                    t_com.selected = false;
+                if (!pContenSizeChanged) {
+                    item.active = true;
+                    if (this.itemRenderer) {
+                        this.itemRenderer(item, start + i); // 传递索引和item
+                    }
+                    if (t_com.index == this._curSelectedIndex || this._selectedIndices.indexOf(t_com.index) != -1) {
+                        t_com.selected = true;
+                    }
+                    else {
+                        t_com.selected = false;
+                    }
                 }
                 // console.log("item.height=" + item.height);
                 if (item.height != t_vo.height) {
@@ -567,7 +575,7 @@ export default class AVirtualScrollView extends cc.ScrollView {
         t.refreshContentSize();
         t.forcedRefresh = true;
         t.refresh = true;
-        t.interval = setInterval(t.renderItem.bind(this), 1000 / 10); //定时刷新
+        t.interval = setInterval(t.renderItem.bind(this), 100); //定时刷新
     }
 
     get selectedIndex(): number {

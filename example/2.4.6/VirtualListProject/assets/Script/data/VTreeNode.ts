@@ -6,15 +6,25 @@ export default class VTreeNode {
 
 	data: any;
 
+	/** 在扁平化列表中的index */
+	listIndex = 0;
+
 	parent: VTreeNode;
 	children: VTreeNode[];
 	depth = 0;
-	fold = false;
+	open = false;
 	canFold = false;
 
-	constructor() {
+	isRoot = false;
+
+	constructor(pIsRoot: boolean = false) {
 		let t = this;
 		t.uid = VTreeNode.UID++;
+		t.isRoot = pIsRoot;
+		if (pIsRoot) {
+			t.depth = -1;
+			t.open = true;
+		}
 	}
 
 	addChild(pChild: VTreeNode) {
@@ -65,6 +75,38 @@ export default class VTreeNode {
 			for (let i = 0; i < t.children.length; i++) {
 				let t_child = t.children[i];
 				t_child.traverse(pFunc);
+			}
+		}
+	}
+
+	/** 是否打开 */
+	isOpen(): boolean {
+		let t = this;
+		let t_node: VTreeNode = t;
+		while (t_node) {
+			if (!t_node.open)
+				return false;
+			t_node = t_node.parent;
+		}
+		return true;
+	}
+
+	/** 是否末节点 */
+	isEndNode(): boolean {
+		let t = this;
+		return !t.children || t.children.length == 0;
+	}
+
+	/** 折叠所有 */
+	foldAll() {
+		let t = this;
+		if (!t.isRoot) {
+			t.open = false;
+		}
+		if (t.children) {
+			for (let i = 0; i < t.children.length; i++) {
+				let t_child = t.children[i];
+				t_child.foldAll();
 			}
 		}
 	}

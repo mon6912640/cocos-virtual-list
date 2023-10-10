@@ -278,7 +278,7 @@
       "ctor": "Float64Array",
       "array": [
         4.822,
-        38.642,
+        191.935,
         0,
         0,
         0,
@@ -540,7 +540,7 @@
     "itemRenderPF": {
       "__uuid__": "5a56f404-dedd-4edc-9651-8f871865ed66"
     },
-    "selectMode": 1,
+    "selectMode": 0,
     "_id": "99lIelsANGk7HwL7MRrGv+"
   },
   {

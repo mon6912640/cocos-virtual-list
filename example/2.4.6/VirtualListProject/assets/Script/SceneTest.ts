@@ -45,8 +45,7 @@ export class SceneTest extends cc.Component {
 
 		// console.log(t.cfgStickMap);
 
-		t._treeRoot = new VTreeNode();
-		t._treeRoot.depth = -1;
+		t._treeRoot = new VTreeNode(true);
 		t.treeVoMap[t._treeRoot.uid] = t._treeRoot;
 
 		//构建列表数据
@@ -123,12 +122,23 @@ export class SceneTest extends cc.Component {
 		}
 		console.log(t._treeRoot);
 
+		t._treeRoot.foldAll(); //默认折叠所有
+		t.rebuildDataList();
+	}
+
+	private _curId = 0;
+
+	private rebuildDataList(): void {
+		let t = this;
 		let t_tnodeList: VTreeNode[] = [];
 		//遍历树结构 扁平化树结构
 		t._treeRoot.traverse((pNode) => {
-			if (pNode.depth == -1) //根节点不处理
+			if (pNode.isRoot) //根节点不处理
 				return;
-			t_tnodeList.push(pNode);
+			if (pNode.parent.isOpen()) { //父节点是打开状态才显示
+				t_tnodeList.push(pNode);
+				pNode.listIndex = t_tnodeList.length - 1;
+			}
 		});
 		t._dataList = t_tnodeList;
 	}
@@ -140,6 +150,7 @@ export class SceneTest extends cc.Component {
 		t.mylist.itemRenderer = t.onItemRender.bind(t);
 		t.mylist.node.on(ListEvent.SELECT_CHANGE, t.onSelectChange, t);
 		t.mylist.numItems = t._dataList.length;
+		t.mylist.setTouchItemCallback(t.onItemClick, t);
 	}
 
 	private onItemRender(pItem: cc.Node, pIndex: number): void {
@@ -149,9 +160,58 @@ export class SceneTest extends cc.Component {
 		}
 	}
 
+	private _targetNodeUid = 0;
+
+	/** item点击处理（区别于选中） */
+	private onItemClick(pIndex: number) {
+		let t = this;
+		console.log(`onItemClick index=${pIndex}`);
+		if (!t._dataList || t._dataList.length <= pIndex)
+			return;
+		let t_tnode = t._dataList[pIndex];
+		let t_vo = t_tnode.data;
+		if (t_vo instanceof ItemTagVo) {
+			if (t_tnode.isOpen()) { //已经打开的折叠
+				t_tnode.open = false; //折叠
+			}
+			else { //未打开的展开
+				//选中最近的末节点
+				let t_curNode = t_tnode;
+				while (t_curNode && !t_curNode.isEndNode()) {
+					t_curNode.open = true;
+					t_curNode = t_curNode.children[0];
+				}
+				if (t_curNode && t_curNode.data instanceof MyItemVo) {
+					t._targetNodeUid = t_curNode.uid;
+					t.mylist.clearSelections(); //清空选中
+					t.mylist.addSeletion(t_curNode.listIndex);
+					while (t_curNode.parent && t_curNode.parent.depth >= 0) {
+						t_curNode = t_curNode.parent;
+						t.mylist.addSeletion(t_curNode.listIndex);
+					}
+				}
+			}
+			t.rebuildDataList();
+			t.mylist.numItems = t._dataList.length;
+			console.log(`t._dataList.length=${t._dataList.length}`);
+		}
+		else if (t_vo instanceof MyItemVo) {
+			console.log(`点击了${t_vo.cfg.Desc}`);
+			t.mylist.clearSelections(); //清空选中
+			t.mylist.addSeletion(pIndex);
+			let t_curNode = t_tnode;
+			while (t_curNode.parent && t_curNode.parent.depth >= 0) {
+				t_curNode = t_curNode.parent;
+				t.mylist.addSeletion(t_curNode.listIndex);
+			}
+		}
+	}
+
 	/** 选中处理 */
 	private onSelectChange(pIndex: number) {
 		let t = this;
-		console.log(`onSelectChange index=${pIndex}`);
+		// console.log(`onSelectChange index=${pIndex}`);
+		// if (!t._dataList || t._dataList.length <= pIndex)
+		// 	return;
 	}
 }
