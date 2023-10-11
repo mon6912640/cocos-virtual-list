@@ -1,9 +1,9 @@
 import { MyItem } from "../Prefab/MyItem";
 import VList, { ListEvent } from "./core/VList";
+import VTreeNode from "./core/VTreeNode";
 import { Cfg_Stick, Cfg_StickType } from "./data/CFG";
 import ItemTagVo from "./data/ItemTagVo";
 import MyItemVo from "./data/MyItemVo";
-import VTreeNode from "./core/VTreeNode";
 
 const { ccclass, property } = cc._decorator;
 
@@ -21,9 +21,6 @@ export class SceneTest extends cc.Component {
 	@property(cc.JsonAsset)
 	cfg_stick_type: cc.JsonAsset = null;
 
-	cfgStickMap: { [itemid: number]: Cfg_Stick } = {};
-	cfgStickTypeMap: { [type: number]: Cfg_StickType } = {};
-
 	tagMap: { [type: number]: ItemTagVo } = {};
 	itemVoMap: { [id: number]: MyItemVo } = {};
 
@@ -35,19 +32,10 @@ export class SceneTest extends cc.Component {
 		let t_cfgobj1 = t.cfg_stick.json; //字典
 		let t_cfgobj2 = t.cfg_stick_type.json; //数组
 
-		t.cfgStickMap = t_cfgobj1;
-
-		for (let i = 0; i < t_cfgobj2.length; i++) {
-			let t_cfg: Cfg_StickType = t_cfgobj2[i];
-			t.cfgStickTypeMap[t_cfg.Type] = t_cfg;
-		}
-
-		// console.log(t.cfgStickMap);
-
 		t._treeRoot = VTreeNode.create();
 		t._treeRoot.setRoot(true);
 
-		//构建列表数据
+		//初始化标签数据
 		for (let v of t_cfgobj2) {
 			let t_cfg2: Cfg_StickType = v;
 			let t_tag = new ItemTagVo();
@@ -61,12 +49,10 @@ export class SceneTest extends cc.Component {
 
 			if (t_cfg2.P == 0) {
 				//一级标签
-				t_tag.canFold = true;
 				t_tag.itemType = 0;
 			}
 			else { //有父标签的表示是二级标签
 				//二级标签
-				t_tag.canFold = false; //二级标签不可折叠
 				t_tag.itemType = 1;
 			}
 		}
@@ -79,8 +65,8 @@ export class SceneTest extends cc.Component {
 			t_vo.cfg = t_cfg1;
 			t.itemVoMap[t_vo.id] = t_vo;
 
-			let t_tnode = VTreeNode.create();
-			t_tnode.data = t_vo;
+			let t_nItem = VTreeNode.create();
+			t_nItem.data = t_vo;
 
 			let t_parent0: VTreeNode;
 			if (t_cfg1.Type2) {
@@ -88,12 +74,12 @@ export class SceneTest extends cc.Component {
 				let t_tag = t.tagMap[t_cfg1.Type2];
 				if (!t_tag) {
 					console.log(`error 不存在标签type = ${t_cfg1.Type2}`);
-					t_tnode.recycle();
+					t_nItem.recycle();
 					continue;
 				}
 				let t_node1 = t_tag.tnode;
 				if (t_node1) {
-					t_node1.addChild(t_tnode);
+					t_node1.addChild(t_nItem);
 					t_parent0 = t_node1;
 				}
 			}
@@ -101,16 +87,16 @@ export class SceneTest extends cc.Component {
 				let t_tag = t.tagMap[t_cfg1.Type];
 				if (!t_tag) {
 					console.log(`error 不存在标签type = ${t_cfg1.Type}`);
-					t_tnode.recycle();
+					t_nItem.recycle();
 					continue;
 				}
 				let t_node0 = t_tag.tnode;
 				if (t_node0) {
-					if (t_tnode.parent) {
-						t_node0.addChild(t_tnode.parent);
+					if (t_nItem.parent) {
+						t_node0.addChild(t_nItem.parent);
 					}
 					else {
-						t_node0.addChild(t_tnode);
+						t_node0.addChild(t_nItem);
 					}
 					t_parent0 = t_node0;
 				}
@@ -149,6 +135,7 @@ export class SceneTest extends cc.Component {
 		t.mylist.itemRenderer = t.onItemRender.bind(t);
 		t.mylist.node.on(ListEvent.SELECT_CHANGE, t.onSelectChange, t);
 		t.mylist.numItems = t._dataList.length;
+		console.log(`_dataList.length=${t._dataList.length}`);
 		t.mylist.setTouchItemCallback(t.onItemClick, t);
 
 		// t._treeRoot.recycle();
