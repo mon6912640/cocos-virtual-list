@@ -108,7 +108,7 @@ export default class VList extends cc.ScrollView {
         this._numItems = 0;
         this.itemList = null;
         this.itemComList = null;
-        clearInterval(this.interval);
+        this.unschedule(this.renderItem);
     }
 
     /**利用cc.ScrollView本身方法 来标记滑动中 */
@@ -560,15 +560,12 @@ export default class VList extends cc.ScrollView {
         let t = this;
         t._numItems = value;
 
-        if (t.interval) {
-            clearInterval(t.interval);
-        }
         t.addItem();
         t.refreshVoData();
         t.refreshContentSize();
         t.forcedRefresh = true;
         t.refresh = true;
-        t.interval = setInterval(t.renderItem.bind(this), 100); //定时刷新
+        t.schedule(t.renderItem.bind(this), 0.1); //定时刷新
     }
 
     get selectedIndex(): number {

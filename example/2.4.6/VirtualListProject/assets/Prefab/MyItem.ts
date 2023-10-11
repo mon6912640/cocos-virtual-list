@@ -1,7 +1,7 @@
 import VListItem from "../Script/core/VListItem";
 import ItemTagVo from "../Script/data/ItemTagVo";
 import MyItemVo from "../Script/data/MyItemVo";
-import VTreeNode from "../Script/data/VTreeNode";
+import VTreeNode from "../Script/core/VTreeNode";
 
 const { ccclass, property } = cc._decorator;
 

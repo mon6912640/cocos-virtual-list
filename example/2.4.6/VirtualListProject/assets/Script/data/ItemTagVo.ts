@@ -1,5 +1,5 @@
 import { Cfg_StickType } from "./CFG";
-import VTreeNode from "./VTreeNode";
+import VTreeNode from "../core/VTreeNode";
 
 export default class ItemTagVo {
 

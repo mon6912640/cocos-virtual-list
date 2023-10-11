@@ -3,7 +3,7 @@ import VList, { ListEvent } from "./core/VList";
 import { Cfg_Stick, Cfg_StickType } from "./data/CFG";
 import ItemTagVo from "./data/ItemTagVo";
 import MyItemVo from "./data/MyItemVo";
-import VTreeNode from "./data/VTreeNode";
+import VTreeNode from "./core/VTreeNode";
 
 const { ccclass, property } = cc._decorator;
 
