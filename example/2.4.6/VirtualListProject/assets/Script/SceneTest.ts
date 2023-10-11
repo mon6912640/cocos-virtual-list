@@ -28,7 +28,6 @@ export class SceneTest extends cc.Component {
 	itemVoMap: { [id: number]: MyItemVo } = {};
 
 	private _treeRoot: VTreeNode;
-	treeVoMap: { [uid: number]: VTreeNode } = {};
 
 	protected onLoad(): void {
 		let t = this;
@@ -45,8 +44,8 @@ export class SceneTest extends cc.Component {
 
 		// console.log(t.cfgStickMap);
 
-		t._treeRoot = new VTreeNode(true);
-		t.treeVoMap[t._treeRoot.uid] = t._treeRoot;
+		t._treeRoot = VTreeNode.create();
+		t._treeRoot.setRoot(true);
 
 		//构建列表数据
 		for (let v of t_cfgobj2) {
@@ -56,8 +55,7 @@ export class SceneTest extends cc.Component {
 			t_tag.cfg = t_cfg2;
 			t.tagMap[t_cfg2.Type] = t_tag;
 
-			let t_tnode = new VTreeNode();
-			t.treeVoMap[t_tnode.uid] = t_tnode;
+			let t_tnode = VTreeNode.create();
 			t_tag.tnode = t_tnode;
 			t_tnode.data = t_tag;
 
@@ -81,8 +79,7 @@ export class SceneTest extends cc.Component {
 			t_vo.cfg = t_cfg1;
 			t.itemVoMap[t_vo.id] = t_vo;
 
-			let t_tnode = new VTreeNode();
-			t.treeVoMap[t_tnode.uid] = t_tnode;
+			let t_tnode = VTreeNode.create();
 			t_tnode.data = t_vo;
 
 			let t_parent0: VTreeNode;
@@ -91,6 +88,7 @@ export class SceneTest extends cc.Component {
 				let t_tag = t.tagMap[t_cfg1.Type2];
 				if (!t_tag) {
 					console.log(`error 不存在标签type = ${t_cfg1.Type2}`);
+					t_tnode.recycle();
 					continue;
 				}
 				let t_node1 = t_tag.tnode;
@@ -103,6 +101,7 @@ export class SceneTest extends cc.Component {
 				let t_tag = t.tagMap[t_cfg1.Type];
 				if (!t_tag) {
 					console.log(`error 不存在标签type = ${t_cfg1.Type}`);
+					t_tnode.recycle();
 					continue;
 				}
 				let t_node0 = t_tag.tnode;
@@ -151,6 +150,10 @@ export class SceneTest extends cc.Component {
 		t.mylist.node.on(ListEvent.SELECT_CHANGE, t.onSelectChange, t);
 		t.mylist.numItems = t._dataList.length;
 		t.mylist.setTouchItemCallback(t.onItemClick, t);
+
+		// t._treeRoot.recycle();
+		// console.log(`VTreeNode.pool.length=${VTreeNode.pool.length}`);
+		// console.log(t._treeRoot._uidMap);
 	}
 
 	private onItemRender(pItem: cc.Node, pIndex: number): void {
@@ -192,7 +195,7 @@ export class SceneTest extends cc.Component {
 			t.mylist.numItems = t._dataList.length;
 			t.mylist.clearSelections(); //清空选中
 			if (t_targeNodeUid) {
-				let t_curNode = t.treeVoMap[t_targeNodeUid];
+				let t_curNode = t._treeRoot.getChildByUid(t_targeNodeUid);
 				t.mylist.addSeletion(t_curNode.listIndex);
 				let t_itemvo = t_curNode.data as MyItemVo;
 				console.log(`选中了${t_itemvo.cfg.Desc}`);
