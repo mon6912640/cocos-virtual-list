@@ -40,8 +40,6 @@ export default class VList extends cc.ScrollView {
     /**预制体宽高 */
     private itemW: number;
     private itemH: number;
-    /**定时器 */
-    private interval: number;
     /**预制体池 */
     private itemPool: cc.Node[];
     /**预制体列表 */
@@ -105,10 +103,10 @@ export default class VList extends cc.ScrollView {
     }
 
     protected onDestroy(): void {
+        super.onDestroy();
         this._numItems = 0;
         this.itemList = null;
         this.itemComList = null;
-        clearInterval(this.interval);
     }
 
     /**利用cc.ScrollView本身方法 来标记滑动中 */
@@ -244,6 +242,7 @@ export default class VList extends cc.ScrollView {
         }
         this.refresh = false;
         this.forcedRefresh = false;
+        console.log("执行 ==== renderItem");
     }
 
     /**刷新水平 */
@@ -551,6 +550,18 @@ export default class VList extends cc.ScrollView {
     //===========================API===============================
     //=============================================================
 
+    private _accDt = 0;
+    protected update(dt: number): void {
+        let t = this;
+        super.update(dt);
+        t._accDt += dt;
+        if (t._accDt < 0.1)
+            return;
+        t._accDt = 0;
+        t.renderItem();
+        // console.log("fuck====================");
+    }
+
     get numItems(): number {
         let t = this;
         return t._numItems;
@@ -560,15 +571,12 @@ export default class VList extends cc.ScrollView {
         let t = this;
         t._numItems = value;
 
-        if (t.interval) {
-            clearInterval(t.interval);
-        }
         t.addItem();
         t.refreshVoData();
         t.refreshContentSize();
         t.forcedRefresh = true;
         t.refresh = true;
-        t.interval = setInterval(t.renderItem.bind(this), 100); //定时刷新
+        t._accDt = 0; //重置刷新时间
     }
 
     get selectedIndex(): number {
